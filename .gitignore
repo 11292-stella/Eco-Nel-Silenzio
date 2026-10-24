@@ -1,0 +1,15 @@
+# IntelliJ
+.idea/
+*.iml
+
+# File del sistema operativo
+Thumbs.db
+.DS_Store
+
+# File generati (in qualsiasi servizio)
+target/
+node_modules/
+
+
+# Appunti personali (non pubblici)
+ECO_NEL_SILENZIO_PROGRESSI.md
