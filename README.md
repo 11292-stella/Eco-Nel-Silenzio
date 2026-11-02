@@ -1,3 +1,25 @@
+# 📖 Eco nel Silenzio
+
+Lettore di PDF con voce narrante, costruito a **microservizi**.
+
+Carichi un PDF (un racconto, un libro) e l'applicazione lo mostra come un **libro aperto**:
+- pagina destra: il testo, con la **frase letta evidenziata**
+- pagina sinistra: **illustrazioni d'atmosfera** realizzate da me, divise per tema
+- intanto una **voce sintetica** legge il testo, frase per frase
+
+> 🚧 Progetto in sviluppo. I servizi `libri` e `gateway` sono pronti; gli altri sono in arrivo.
+
+## Architettura
+
+```
+Frontend React (libro aperto)
+            │
+       API Gateway  (Spring Cloud Gateway, porta 8080)
+     ┌──────┼──────────┐
+   libri   voce     immagini
+     │      ▲
+     └─► RabbitMQ ─┘   "frase pronta da leggere"
+```
 
 Ogni servizio è un'applicazione Spring Boot indipendente, con il proprio database e le proprie versioni.
 Il client parla solo con il **gateway**, che inoltra le richieste al servizio giusto.
@@ -32,18 +54,21 @@ Il progetto segue la **piramide dei test**:
 Requisiti: **Java 21+** e **Docker Desktop** avviato.
 
 **1. Servizio `libri`** (avvia anche PostgreSQL dal `compose.yaml`)
+
 ```bash
 cd libri
 ./mvnw spring-boot:run
 ```
 
 **2. Gateway** (in un altro terminale)
+
 ```bash
 cd gateway
 ./mvnw spring-boot:run
 ```
 
 **Test** del servizio `libri`:
+
 ```bash
 cd libri
 ./mvnw test
