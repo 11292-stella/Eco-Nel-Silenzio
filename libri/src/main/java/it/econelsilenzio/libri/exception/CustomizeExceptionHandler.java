@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /**
@@ -32,6 +33,13 @@ public class CustomizeExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiError> fileTroppoGrande(MaxUploadSizeExceededException ex) {
         return risposta(HttpStatus.PAYLOAD_TOO_LARGE, "Il file supera la dimensione massima consentita");
+    }
+
+    // Parametro dell'URL del tipo sbagliato (es. /api/libri/abc/pagine/2) → 400
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> parametroNonValido(MethodArgumentTypeMismatchException ex) {
+        return risposta(HttpStatus.BAD_REQUEST,
+                "Il parametro '" + ex.getName() + "' non è valido: deve essere un numero");
     }
 
     // Qualsiasi altro errore imprevisto → 500

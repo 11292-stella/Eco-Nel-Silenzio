@@ -109,6 +109,29 @@ class LibroControllerTest {
                 .andExpect(jsonPath("$.message").value("Pagina 99 del libro 1 non trovata"));
     }
 
+    @Test
+    @DisplayName("GET con un id non numerico → 400 (non 500) e il service non viene chiamato")
+    void idNonNumerico() throws Exception {
+        mockMvc.perform(get("/api/libri/abc/pagine/2"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message")
+                        .value("Il parametro 'id' non è valido: deve essere un numero"));
+
+        verifyNoInteractions(libroService);
+    }
+
+    @Test
+    @DisplayName("GET con un numero di pagina non numerico → 400 che indica il parametro 'numero'")
+    void numeroPaginaNonNumerico() throws Exception {
+        mockMvc.perform(get("/api/libri/5/pagine/xyz"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Il parametro 'numero' non è valido: deve essere un numero"));
+
+        verifyNoInteractions(libroService);
+    }
+
     // Un Libro già "salvato", come lo restituirebbe il service vero
     private Libro libroFinto(Long id, String titolo, int numeroPagine) {
         Libro libro = new Libro();
