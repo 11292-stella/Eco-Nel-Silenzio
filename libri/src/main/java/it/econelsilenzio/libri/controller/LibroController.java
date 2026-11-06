@@ -64,4 +64,14 @@ public class LibroController {
             throw new ValidationException("Il file deve essere un PDF");
         }
     }
+
+    /**
+     * Cancella un libro con tutte le sue pagine e frasi.
+     * 204 se lo cancella, 404 se non esiste.
+     */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void elimina(@PathVariable Long id) {
+        libroService.elimina(id);
+    }
 }

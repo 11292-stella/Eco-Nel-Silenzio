@@ -92,6 +92,35 @@ class LibroRepositoryTest {
         assertThat(risultato).isEmpty();
     }
 
+    @Test
+    @DisplayName("eliminaPerId cancella il libro e PostgreSQL toglie pagine e frasi (ON DELETE CASCADE)")
+    void eliminaLibroConPagineEFrasi() {
+        Libro salvato = libroRepository.save(libroDiProva("Da cancellare", 3));
+        svuotaCache();
+
+        // prima: 1 libro, 3 pagine, 6 frasi (2 per pagina)
+        assertThat(conta("libro")).isEqualTo(1);
+        assertThat(conta("pagina")).isEqualTo(3);
+        assertThat(conta("frase")).isEqualTo(6);
+
+        int cancellati = libroRepository.eliminaPerId(salvato.getId());
+        svuotaCache();
+
+        // dopo: non resta niente, nemmeno pagine e frasi
+        assertThat(cancellati).isEqualTo(1);
+        assertThat(libroRepository.findById(salvato.getId())).isEmpty();
+        assertThat(conta("pagina")).isZero();
+        assertThat(conta("frase")).isZero();
+    }
+
+    @Test
+    @DisplayName("eliminaPerId con un id che non esiste → 0 righe cancellate")
+    void eliminaLibroInesistente() {
+        int cancellati = libroRepository.eliminaPerId(999L);
+
+        assertThat(cancellati).isZero();
+    }
+
     // --- metodi di supporto ---
 
     // Un libro finto con N pagine, ognuna con 2 frasi
@@ -121,5 +150,13 @@ class LibroRepositoryTest {
     private void svuotaCache() {
         entityManager.flush();
         entityManager.clear();
+    }
+
+    // Conta le righe di una tabella direttamente in PostgreSQL (SQL vero, non JPQL)
+    private long conta(String tabella) {
+        Number risultato = (Number) entityManager
+                .createNativeQuery("SELECT COUNT(*) FROM " + tabella)
+                .getSingleResult();
+        return risultato.longValue();
     }
 }

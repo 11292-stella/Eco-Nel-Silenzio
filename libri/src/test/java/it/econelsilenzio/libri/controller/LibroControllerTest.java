@@ -17,12 +17,9 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 // Carica solo il controller (+ l'handler delle eccezioni), niente database
 @WebMvcTest(LibroController.class)
@@ -128,6 +125,39 @@ class LibroControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("Il parametro 'numero' non è valido: deve essere un numero"));
+
+        verifyNoInteractions(libroService);
+    }
+
+    // --- Passo 44: DELETE /api/libri/{id} ---
+
+    @Test
+    @DisplayName("DELETE /api/libri/5 → 204 senza corpo e il service cancella il libro 5")
+    void eliminaLibro() throws Exception {
+        mockMvc.perform(delete("/api/libri/5"))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
+
+        verify(libroService).elimina(5L);
+    }
+
+    @Test
+    @DisplayName("DELETE di un libro che non esiste → 404 con il messaggio")
+    void eliminaLibroInesistente() throws Exception {
+        doThrow(new NotFoundException("Libro 99 non trovato"))
+                .when(libroService).elimina(99L);
+
+        mockMvc.perform(delete("/api/libri/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Libro 99 non trovato"));
+    }
+
+    @Test
+    @DisplayName("DELETE con un id non numerico → 400 e il service non viene chiamato")
+    void eliminaIdNonNumerico() throws Exception {
+        mockMvc.perform(delete("/api/libri/abc"))
+                .andExpect(status().isBadRequest());
 
         verifyNoInteractions(libroService);
     }

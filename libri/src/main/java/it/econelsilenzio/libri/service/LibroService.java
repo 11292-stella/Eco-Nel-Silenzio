@@ -86,4 +86,19 @@ public class LibroService {
                 .orElseThrow(() -> new NotFoundException(
                         "Pagina " + numero + " del libro " + libroId + " non trovata"));
     }
+
+
+    /**
+     * Cancella un libro con tutte le sue pagine e frasi.
+     *
+     * @throws NotFoundException se il libro non esiste (→ 404)
+     */
+    @Transactional
+    public void elimina(Long id) {
+        int cancellati = libroRepository.eliminaPerId(id);
+
+        if (cancellati == 0) {
+            throw new NotFoundException("Libro " + id + " non trovato");
+        }
+    }
 }
