@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { elencoLibri } from '../api/libri'
+import CardLibro from './CardLibro'
 
 /**
- * La "libreria": mostra l'elenco dei libri caricati.
+ * La "libreria": chiede i libri al backend e mostra una CardLibro per ognuno.
  */
 export default function Libreria() {
   const [libri, setLibri] = useState([])          // i libri arrivati dal backend
@@ -29,32 +30,46 @@ export default function Libreria() {
     }
   }, [])
 
+  // --- Caricamento: spinner di Bootstrap ---
   if (caricamento) {
-    return <p data-testid="libreria-caricamento">Caricamento dei libri...</p>
+    return (
+      <div className="d-flex align-items-center gap-2" data-testid="libreria-caricamento">
+        <div className="spinner-border spinner-border-sm" role="status" />
+        <span>Caricamento dei libri...</span>
+      </div>
+    )
   }
 
+  // --- Errore: avviso rosso ---
   if (errore) {
-    return <p data-testid="libreria-errore">{errore}</p>
+    return (
+      <div className="alert alert-danger" role="alert" data-testid="libreria-errore">
+        {errore}
+      </div>
+    )
   }
 
+  // --- Nessun libro: avviso neutro ---
   if (libri.length === 0) {
-    return <p data-testid="libreria-vuota">Nessun libro caricato.</p>
+    return (
+      <div className="alert alert-secondary" data-testid="libreria-vuota">
+        Nessun libro caricato.
+      </div>
+    )
   }
 
+  // --- Lo scaffale: una CardLibro per libro ---
   return (
     <section>
-      <h2>La tua libreria</h2>
-      <ul data-testid="libreria-elenco">
+      <h2 className="mb-4">La tua libreria</h2>
+
+      <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" data-testid="libreria-elenco">
         {libri.map((libro) => (
-          <li key={libro.id} data-testid="libro">
-            <strong>{libro.titolo}</strong>
-            {' · '}
-            {libro.numeroPagine} pagine
-            {' · '}
-            caricato il {new Date(libro.dataCaricamento).toLocaleDateString('it-IT')}
-          </li>
+          <div className="col" key={libro.id}>
+            <CardLibro libro={libro} />
+          </div>
         ))}
-      </ul>
+      </div>
     </section>
   )
 }

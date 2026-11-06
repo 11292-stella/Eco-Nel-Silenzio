@@ -1,0 +1,84 @@
+/* Card a forma di libro: copertina disegnata in CSS (niente immagine per ora) */
+
+.card-libro {
+  border: none;
+  border-radius: 4px 10px 10px 4px;          /* dorso a sinistra squadrato, bordo destro arrotondato */
+  box-shadow: 4px 6px 14px rgba(22, 43, 100, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.card-libro:hover {
+  transform: translateY(-4px) rotate(-0.5deg); /* il libro si "solleva" dallo scaffale */
+  box-shadow: 6px 10px 22px rgba(22, 43, 100, 0.28);
+}
+
+/* --- La copertina --- */
+.copertina {
+  position: relative;
+  aspect-ratio: 3 / 4;                        /* proporzioni di un libro */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1.25rem 1.5rem 2rem;
+  color: #f8f5f0;
+  text-align: center;
+}
+
+/* il dorso: una striscia piu' scura a sinistra, con una piega di luce */
+.copertina::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 14px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.1) 70%, rgba(255, 255, 255, 0.25));
+}
+
+/* la cornice dorata */
+.copertina::after {
+  content: '';
+  position: absolute;
+  inset: 12px 12px 12px 24px;
+  border: 1px solid rgba(230, 199, 122, 0.7);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.copertina-titolo {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.35rem;
+  line-height: 1.3;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  margin: 0;
+}
+
+.copertina-fregio {
+  display: block;
+  color: #e6c77a;
+  font-size: 0.9rem;
+  letter-spacing: 6px;
+  margin: 0.75rem 0;
+}
+
+/* --- Colori delle copertine (presi dal logo), scelti in base all'id del libro --- */
+.copertina-0 { background: linear-gradient(160deg, #2448a8 0%, #162b64 100%); }   /* blu notte */
+.copertina-1 { background: linear-gradient(160deg, #1a99c9 0%, #1e3a5f 100%); }   /* azzurro */
+.copertina-2 { background: linear-gradient(160deg, #37c4be 0%, #1f5f6b 100%); }   /* verde acqua */
+.copertina-3 { background: linear-gradient(160deg, #3f6b4a 0%, #263d2c 100%); }   /* verde bosco */
+
+/* --- Sotto la copertina --- */
+.card-libro .card-body {
+  background-color: #fffdf8;
+}
+
+.card-libro .btn-leggi {
+  background-color: #162b64;
+  border-color: #162b64;
+  color: #f8f5f0;
+}
+
+.card-libro .btn-leggi:hover {
+  background-color: #2448a8;
+  border-color: #c9a34e;
+  color: #e6c77a;
+}
