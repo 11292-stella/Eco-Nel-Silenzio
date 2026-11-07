@@ -1,9 +1,36 @@
 /*
- * Stile globale di Eco nel Silenzio.
- * La base (caratteri, margini, colori) la da' Bootstrap:
- * qui mettiamo solo le nostre regole.
+ * Stile globale di Eco nel Silenzio – tema "libreria delle fiabe".
+ * La base la da' Bootstrap: qui sfondo di pergamena e caratteri antichi.
  */
 
-body {
-  background-color: #f8f5f0; /* color carta, per l'atmosfera da libro */
+/* I colori del tema, riusabili in tutti i CSS con var(--nome) */
+:root {
+  --carta: #efe3c6;          /* pergamena */
+  --carta-chiara: #f7efd9;
+  --inchiostro: #3b2a1a;     /* testo marrone scuro, come inchiostro vecchio */
+  --oro: #c9a34e;
+  --oro-chiaro: #e8cf8f;
+  --legno: #6b4423;
 }
+
+body {
+  color: var(--inchiostro);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 1.1rem;
+  background-color: #1c140c;                       /* colore di riserva mentre l'immagine si carica */
+  /* velatura scura sopra la foto, cosi il testo resta leggibile */
+  background-image:
+    linear-gradient(180deg, rgba(20, 12, 5, 0.15) 0%, rgba(20, 12, 5, 0.4) 100%),
+    url('./assets/sfondo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;                    /* lo sfondo resta fermo quando scorri */
+  min-height: 100vh;
+}
+
+h1, h2, h3, .titolo-fiaba {
+  font-family: 'IM Fell English', Georgia, serif;
+  color: var(--inchiostro);
+}
+
+

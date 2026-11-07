@@ -1,14 +1,23 @@
 import { useEffect, useState } from 'react'
-import { elencoLibri } from '../api/libri'
+import { elencoLibri, eliminaLibro } from '../api/libri'
 import CardLibro from './CardLibro'
+import ConfermaElimina from './ConfermaElimina'
+import '../styles/Libreria.css'
+import CorniceAntica from './CorniceAntica'
 
 /**
  * La "libreria": chiede i libri al backend e mostra una CardLibro per ognuno.
+ * Gestisce anche l'eliminazione, con la finestra di conferma.
  */
 export default function Libreria() {
   const [libri, setLibri] = useState([])          // i libri arrivati dal backend
   const [caricamento, setCaricamento] = useState(true)
   const [errore, setErrore] = useState(null)
+
+  // --- Eliminazione ---
+  const [libroDaEliminare, setLibroDaEliminare] = useState(null)   // il libro nella finestra di conferma
+  const [eliminazioneInCorso, setEliminazioneInCorso] = useState(false)
+  const [erroreEliminazione, setErroreEliminazione] = useState(null)
 
   // Parte una volta sola, quando il componente compare sulla pagina
   useEffect(() => {
@@ -29,6 +38,34 @@ export default function Libreria() {
       attivo = false
     }
   }, [])
+
+  // Clic su "Elimina" nella card → apre la finestra di conferma
+  function chiediConferma(libro) {
+    setErroreEliminazione(null)
+    setLibroDaEliminare(libro)
+  }
+
+  // "Annulla" o X → chiude la finestra senza fare niente
+  function annulla() {
+    setLibroDaEliminare(null)
+    setErroreEliminazione(null)
+  }
+
+  // "Elimina" nella finestra → chiama il backend e toglie il libro dallo scaffale
+  async function confermaEliminazione() {
+    setEliminazioneInCorso(true)
+    setErroreEliminazione(null)
+
+    try {
+      await eliminaLibro(libroDaEliminare.id)
+      setLibri((attuali) => attuali.filter((l) => l.id !== libroDaEliminare.id))
+      setLibroDaEliminare(null)   // chiude la finestra
+    } catch (err) {
+      setErroreEliminazione(err.message)   // la finestra resta aperta e mostra l'errore
+    } finally {
+      setEliminazioneInCorso(false)
+    }
+  }
 
   // --- Caricamento: spinner di Bootstrap ---
   if (caricamento) {
@@ -58,18 +95,28 @@ export default function Libreria() {
     )
   }
 
-  // --- Lo scaffale: una CardLibro per libro ---
+   // --- Lo scaffale: una CardLibro per libro, su un foglio di pergamena ---
   return (
-    <section>
-      <h2 className="mb-4">La tua libreria</h2>
+    <CorniceAntica>
+      <h2 className="libreria-titolo">La tua libreria</h2>
+      <p className="libreria-sottotitolo">Ogni storia aspetta la sua voce</p>
+      <span className="libreria-fregio" aria-hidden="true">✦ ❦ ✦</span>
 
-      <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" data-testid="libreria-elenco">
+      <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 gx-4 gy-5" data-testid="libreria-elenco">
         {libri.map((libro) => (
           <div className="col" key={libro.id}>
-            <CardLibro libro={libro} />
+            <CardLibro libro={libro} onElimina={chiediConferma} />
           </div>
         ))}
       </div>
-    </section>
+
+      <ConfermaElimina
+        libro={libroDaEliminare}
+        inCorso={eliminazioneInCorso}
+        errore={erroreEliminazione}
+        onConferma={confermaEliminazione}
+        onAnnulla={annulla}
+      />
+    </CorniceAntica>
   )
 }

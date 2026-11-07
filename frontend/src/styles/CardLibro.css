@@ -1,84 +1,121 @@
-/* Card a forma di libro: copertina disegnata in CSS (niente immagine per ora) */
+/* Il libro sullo scaffale: copertina di cuoio consumato, mensola di legno, cartellino */
 
-.card-libro {
-  border: none;
-  border-radius: 4px 10px 10px 4px;          /* dorso a sinistra squadrato, bordo destro arrotondato */
-  box-shadow: 4px 6px 14px rgba(22, 43, 100, 0.18);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  overflow: hidden;
-}
-
-.card-libro:hover {
-  transform: translateY(-4px) rotate(-0.5deg); /* il libro si "solleva" dallo scaffale */
-  box-shadow: 6px 10px 22px rgba(22, 43, 100, 0.28);
+.libro {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /* --- La copertina --- */
 .copertina {
   position: relative;
-  aspect-ratio: 3 / 4;                        /* proporzioni di un libro */
+  aspect-ratio: 3 / 4;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem 1.25rem 1.5rem 2rem;
-  color: #f8f5f0;
+  padding: 1.5rem 1.4rem 1.5rem 2rem;   /* piu' spazio a sinistra: li' c'e' il dorso */
   text-align: center;
+  background-size: cover;
+  background-position: center;
+  border-radius: 3px 8px 7px 3px;
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.35),
+    3px 6px 12px rgba(20, 12, 5, 0.55);
+  transform: rotate(var(--inclinazione, 0deg));
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* il dorso: una striscia piu' scura a sinistra, con una piega di luce */
-.copertina::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 14px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.1) 70%, rgba(255, 255, 255, 0.25));
+/* libri inclinati in modo diverso, come appoggiati a mano */
+.col:nth-child(4n + 1) .copertina { --inclinazione: -1.2deg; }
+.col:nth-child(4n + 2) .copertina { --inclinazione: 0.8deg; }
+.col:nth-child(4n + 3) .copertina { --inclinazione: -0.4deg; }
+.col:nth-child(4n + 4) .copertina { --inclinazione: 1.4deg; }
+
+.copertina:hover {
+  transform: translateY(-8px) rotate(0deg);   /* si raddrizza e si solleva */
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.3),
+    6px 16px 24px rgba(20, 12, 5, 0.6);
 }
 
-/* la cornice dorata */
-.copertina::after {
-  content: '';
-  position: absolute;
-  inset: 12px 12px 12px 24px;
-  border: 1px solid rgba(230, 199, 122, 0.7);
-  border-radius: 2px;
-  pointer-events: none;
-}
+/* Le texture di cuoio: le immagini sono in src/assets */
+.copertina-0 { background-image: url('../assets/cuoio-0.jpg'); }   /* blu */
+.copertina-1 { background-image: url('../assets/cuoio-1.jpg'); }   /* verde */
+.copertina-2 { background-image: url('../assets/cuoio-2.jpg'); }   /* bordeaux */
+.copertina-3 { background-image: url('../assets/cuoio-3.jpg'); }   /* marrone */
 
 .copertina-titolo {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 1.35rem;
-  line-height: 1.3;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 1.45rem;
+  line-height: 1.25;
+  color: var(--oro-chiaro);
+  /* effetto "impresso a caldo" nell'oro, leggibile anche sul cuoio rovinato */
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6);
   margin: 0;
 }
 
 .copertina-fregio {
   display: block;
-  color: #e6c77a;
+  color: rgba(232, 207, 143, 0.9);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
+  font-size: 1.1rem;
+  margin: 0.6rem 0;
+}
+
+   /* --- La mensola: continua per tutta la riga (copre anche lo spazio tra le colonne) --- */
+   .mensola {
+     height: 18px;
+     margin: 0 calc(var(--bs-gutter-x) * -0.5);
+     background:
+       linear-gradient(180deg, rgba(255, 220, 170, 0.25) 0 2px, transparent 2px),          /* filo di luce sul bordo */
+       repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.06) 0 3px, transparent 3px 11px),  /* venature del legno */
+       linear-gradient(180deg, #8a5a32 0%, #6b4423 60%, #4a2e17 100%);
+     box-shadow: 0 6px 8px rgba(40, 25, 10, 0.35);
+   }
+
+/* --- Il cartellino sotto la mensola --- */
+.cartellino {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.cartellino-info {
+  font-style: italic;
+  color: #6b5235;
+  font-size: 0.95rem;
+  margin-bottom: 0.6rem;
+}
+
+.btn-leggi {
+  font-family: 'IM Fell English', Georgia, serif;
+  background: linear-gradient(180deg, #2c4a7a, #172a4b);
+  border: 1px solid var(--oro);
+  color: var(--oro-chiaro);
+  padding: 0.25rem 1.4rem;
+}
+
+.btn-leggi:hover {
+  background: linear-gradient(180deg, #3a5d94, #1f3760);
+  border-color: var(--oro-chiaro);
+  color: #fff3d1;
+}
+
+.btn-elimina {
+  background: none;
+  border: none;
+  color: #8a3a2a;
   font-size: 0.9rem;
-  letter-spacing: 6px;
-  margin: 0.75rem 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-/* --- Colori delle copertine (presi dal logo), scelti in base all'id del libro --- */
-.copertina-0 { background: linear-gradient(160deg, #2448a8 0%, #162b64 100%); }   /* blu notte */
-.copertina-1 { background: linear-gradient(160deg, #1a99c9 0%, #1e3a5f 100%); }   /* azzurro */
-.copertina-2 { background: linear-gradient(160deg, #37c4be 0%, #1f5f6b 100%); }   /* verde acqua */
-.copertina-3 { background: linear-gradient(160deg, #3f6b4a 0%, #263d2c 100%); }   /* verde bosco */
-
-/* --- Sotto la copertina --- */
-.card-libro .card-body {
-  background-color: #fffdf8;
+.btn-elimina:hover {
+  color: #5c1f14;
 }
 
-.card-libro .btn-leggi {
-  background-color: #162b64;
-  border-color: #162b64;
-  color: #f8f5f0;
-}
-
-.card-libro .btn-leggi:hover {
-  background-color: #2448a8;
-  border-color: #c9a34e;
-  color: #e6c77a;
+/* Sul telefono: titolo piu' piccolo, cosi' la copertina resta in proporzione */
+@media (max-width: 576px) {
+  .copertina { padding: 0.75rem 0.6rem 0.75rem 1rem; }
+  .copertina-titolo { font-size: 1rem; }
+  .copertina-fregio { font-size: 0.8rem; margin: 0.3rem 0; }
 }

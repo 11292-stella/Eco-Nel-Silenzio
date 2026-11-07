@@ -4,7 +4,7 @@ import '../styles/Navbar.css'
 
 export default function Navbar() {
   return (
-    <nav className="navbar navbar-expand-lg navbar-eco" data-bs-theme="dark" data-testid="navbar">
+        <nav className="navbar navbar-expand-lg navbar-eco" data-testid="navbar">
       <div className="container">
         {/* Logo e nome */}
         <a className="navbar-brand d-flex align-items-center gap-2" href="/">

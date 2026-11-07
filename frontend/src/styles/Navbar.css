@@ -1,52 +1,56 @@
-/* Navbar di Eco nel Silenzio: colori presi dal logo */
+/* Navbar di Eco nel Silenzio: una striscia di carta antica */
 
 .navbar-eco {
-  background-color: #162b64;            /* colore di riserva se il gradiente non viene letto */
-  background-image:
-    /* la luce crema a destra, come il bagliore dell'immagine */
-    radial-gradient(ellipse 25% 160% at 100% 50%, rgba(227, 218, 175, 0.85) 0%, rgba(227, 218, 175, 0) 100%),
-    /* da sinistra a destra: blu notte → blu → azzurro → verde acqua */
-    linear-gradient(90deg, #162b64 0%, #2448a8 40%, #1a99c9 72%, #37c4be 100%);
-  border-bottom: 3px solid #c9a34e;     /* filo oro, come le stelline */
+  background-color: #d9c49a;                    /* colore di riserva mentre l'immagine si carica */
+  background-image: url('../assets/navbar.webp');
+  background-size: cover;
+  background-position: center;
+  border-bottom: 3px solid #6b4423;             /* bordo di legno scuro */
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);   /* ombra sul muro sotto */
 }
 
 .navbar-eco .navbar-brand {
-  color: #f8f5f0;                       /* crema, come le pagine */
-  font-family: Georgia, 'Times New Roman', serif;   /* carattere da libro */
-  font-size: 1.4rem;
-  letter-spacing: 0.5px;
+  color: #3b2a1a;                               /* inchiostro */
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 1.6rem;
+  text-shadow: 0 1px 0 rgba(255, 245, 220, 0.8);   /* filo di luce: si stacca dalla carta */
 }
 
 .navbar-eco .navbar-brand:hover {
-  color: #e6c77a;                       /* oro chiaro al passaggio del mouse */
+  color: #6b4423;
 }
 
 .navbar-eco .logo-eco {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 
-/* --- Link --- */
+/* --- Link: un riquadro di carta piu' chiara, leggibile sopra fregi e calligrafia --- */
 .navbar-eco .nav-link {
-  color: rgba(248, 245, 240, 0.85);     /* crema, un po' trasparente */
-  font-weight: 500;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 1.15rem;
+  color: #3b2a1a;
+  padding: 0.25rem 0.8rem;
+  margin-left: 0.4rem;
+  border-radius: 4px;
+  background-color: rgba(247, 239, 217, 0.55);
 }
 
 .navbar-eco .nav-link:hover,
 .navbar-eco .nav-link.active {
-  color: #e6c77a;                       /* oro chiaro: link al passaggio e pagina attuale */
+  color: #7a2f1f;                               /* rosso mattone */
+  background-color: rgba(247, 239, 217, 0.85);
 }
 
 .navbar-eco .nav-link.active {
-  border-bottom: 2px solid #e6c77a;     /* sottolineatura della pagina attuale */
+  box-shadow: inset 0 -2px 0 #7a2f1f;           /* sottolineatura della pagina attuale */
 }
 
 .navbar-eco .nav-link.disabled {
-  color: rgba(248, 245, 240, 0.45);
+  color: rgba(59, 42, 26, 0.5);
 }
 
 /* etichetta "presto" accanto ai link non ancora pronti */
@@ -59,4 +63,11 @@
   padding: 0 4px;
   margin-left: 4px;
   vertical-align: middle;
+}
+
+/* sul telefono i link vanno uno sotto l'altro: un po' di spazio tra loro */
+@media (max-width: 991px) {
+  .navbar-eco .nav-link {
+    margin: 0.3rem 0 0;
+  }
 }

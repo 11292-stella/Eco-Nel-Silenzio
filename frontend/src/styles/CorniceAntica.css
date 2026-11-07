@@ -1,0 +1,49 @@
+/* Riquadro con la cornice di legno antico (immagine): dentro si vede il muro, scurito e sfocato */
+
+.cornice-antica {
+  position: relative;
+  max-width: 1100px;
+  margin: 2rem auto 3rem;
+  padding: 1rem 1.5rem 1.5rem;
+
+  /* La cornice: l'immagine tagliata in 9 pezzi (angoli fissi, lati che si allungano).
+     I numeri sono lo spessore di ogni lato, nell'ordine: sopra, destra, sotto, sinistra */
+  border-style: solid;
+  border-width: 105px 125px 115px 85px;          /* quanto e' spessa la cornice sulla pagina */
+  border-image-source: url('../assets/cornice.webp');
+  border-image-slice: 126 147 142 97;            /* dove "tagliare" l'immagine, in pixel */
+  border-image-repeat: stretch;
+
+  /* Il muro dietro: piu' scuro e sfocato, cosi' il testo resta leggibile.
+     E' un filtro, non un colore: passa anche sotto i rami senza disegnare un rettangolo */
+  backdrop-filter: blur(2px) brightness(0.62);
+}
+
+/* Sul telefono la cornice e' piu' sottile, altrimenti si mangia lo schermo */
+@media (max-width: 768px) {
+  .cornice-antica {
+    border-width: 52px 62px 58px 42px;
+    padding: 0.5rem;
+  }
+}
+
+/* --- Testi chiari sul fondo scuro --- */
+.cornice-antica h2,
+.cornice-antica .libreria-titolo {
+  color: var(--oro-chiaro);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.cornice-antica .libreria-sottotitolo,
+.cornice-antica .cartellino-info {
+  color: rgba(247, 239, 217, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.cornice-antica .btn-elimina {
+  color: #e8a08a;
+}
+
+.cornice-antica .btn-elimina:hover {
+  color: #ffc4b0;
+}
