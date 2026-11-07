@@ -1,4 +1,5 @@
 import '../styles/CardLibro.css'
+import { Link } from 'react-router'
 
 // Numero di colori di copertina definiti in CardLibro.css (.copertina-0 ... .copertina-3)
 const COLORI_COPERTINA = 4
@@ -34,10 +35,9 @@ export default function CardLibro({ libro, onElimina }) {
         <div className="cartellino-info">
           {libro.numeroPagine} pagine · {data}
         </div>
-        {/* Per ora "#": con React Router portera' alla pagina di lettura /libri/{id} */}
-        <a href="#" className="btn btn-leggi btn-sm" data-testid="card-libro-leggi">
-          Leggi
-        </a>{' '}
+       <Link to={`/libri/${libro.id}`} className="btn btn-leggi btn-sm" data-testid="card-libro-leggi">
+  Leggi
+</Link>{' '}
         <button
           type="button"
           className="btn-elimina"

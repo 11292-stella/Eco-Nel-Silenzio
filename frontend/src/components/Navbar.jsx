@@ -35,7 +35,7 @@ export default function Navbar() {
             </li>
             <li className="nav-item">
               <a className="nav-link" href="#" data-testid="nav-carica">
-                Carica un libro
+                Scarica app
               </a>
             </li>
             <li className="nav-item">
