@@ -1,0 +1,64 @@
+/* La pagina di lettura: per ora una pagina di pergamena dentro la cornice */
+
+.lettura-intestazione {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.lettura-numero {
+  font-style: italic;
+  color: rgba(247, 239, 217, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* la pagina del libro */
+.pagina-libro {
+  max-width: 720px;
+  min-height: 420px;
+  margin: 0 auto;
+  padding: 2.5rem 3rem;
+  color: var(--inchiostro);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  text-align: justify;
+  hyphens: auto;                         /* manda a capo le parole lunghe con il trattino, come nei libri */
+  background-color: var(--carta);
+  background-image: radial-gradient(ellipse at center, rgba(255, 250, 235, 0.6) 0%, rgba(255, 250, 235, 0) 60%, rgba(110, 75, 35, 0.3) 100%);
+  border-radius: 3px 10px 10px 3px;      /* il lato sinistro e' quello della rilegatura */
+  box-shadow:
+    inset 12px 0 18px -10px rgba(110, 75, 35, 0.45),   /* ombra della rilegatura a sinistra */
+    inset 0 0 30px rgba(110, 75, 35, 0.3),
+    0 12px 30px rgba(0, 0, 0, 0.55);
+}
+
+/* ogni frase e' un pezzo a se': servira' per evidenziare quella che la voce sta leggendo */
+.frase {
+  transition: background-color 0.3s ease;
+}
+
+/* lettera iniziale grande, come nei libri antichi */
+.pagina-libro p::first-letter{
+  float: left;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 3.2rem;
+  line-height: 0.9;
+  padding: 0.2rem 0.4rem 0 0;
+  color: #7a2f1f;
+}
+
+/* i pulsanti per sfogliare */
+.lettura-navigazione {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 720px;
+  margin: 1.5rem auto 0;
+}
+
+@media (max-width: 576px) {
+  .pagina-libro {
+    padding: 1.5rem 1.25rem;
+    font-size: 1.1rem;
+  }
+}

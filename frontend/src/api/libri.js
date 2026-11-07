@@ -62,6 +62,24 @@ export async function caricaLibro(file, titolo) {
   return risposta.json();
 }
 
+/**
+ * Una pagina di un libro, con le sue frasi.
+ * Restituisce un oggetto come il PaginaDto di Spring:
+ * { libroId, numero, totalePagine, frasi: [{ numero, testo }, ...] }
+ * Se il libro o la pagina non esistono il backend risponde 404 (es. "Pagina 9 del libro 5 non trovata").
+ */
+export async function paginaLibro(id, numero) {
+  const risposta = await fetch(`${BASE}/${id}/pagine/${numero}`);
+
+  if (!risposta.ok) {
+    throw new Error(
+      await messaggioErrore(risposta, "Errore nel caricare la pagina"),
+    );
+  }
+
+  return risposta.json();
+}
+
 // Prende il messaggio dall'ApiError del backend ({ status, message, dataErrore }).
 // Se il corpo non e' un JSON (es. il gateway e' spento), usa il messaggio di riserva.
 async function messaggioErrore(risposta, riserva) {
