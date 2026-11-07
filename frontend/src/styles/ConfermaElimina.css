@@ -1,0 +1,61 @@
+/* La finestra di conferma come un foglio di pergamena, come il modulo di caricamento */
+
+.modal-pergamena .modal-content {
+  color: var(--inchiostro);
+  background-color: var(--carta);
+  background-image: radial-gradient(ellipse at center, rgba(255, 250, 235, 0.6) 0%, rgba(255, 250, 235, 0) 60%, rgba(110, 75, 35, 0.3) 100%);
+  border: none;
+  border-radius: 4px 8px 6px 10px / 8px 4px 10px 6px;   /* bordi irregolari, come carta tagliata a mano */
+  box-shadow:
+    inset 0 0 30px rgba(110, 75, 35, 0.35),
+    0 14px 40px rgba(0, 0, 0, 0.6);
+}
+
+.modal-pergamena .modal-header,
+.modal-pergamena .modal-footer {
+  border-color: rgba(110, 75, 35, 0.25);
+}
+
+.modal-pergamena .modal-title {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 1.5rem;
+}
+
+/* sfondo dietro la finestra: piu' scuro e caldo, come una stanza a lume di candela */
+.modal-backdrop.show {
+  background-color: #140c05;
+  opacity: 0.7;
+}
+
+/* "Annulla": bordo e testo color legno */
+.btn-annulla-antico {
+  font-family: 'IM Fell English', Georgia, serif;
+  color: var(--legno);
+  border: 1px solid rgba(107, 68, 35, 0.6);
+  background: transparent;
+}
+
+.btn-annulla-antico:hover {
+  color: var(--inchiostro);
+  background-color: rgba(107, 68, 35, 0.1);
+  border-color: var(--legno);
+}
+
+/* "Elimina": cuoio rosso scuro con il filo d'oro */
+.btn-elimina-antico {
+  font-family: 'IM Fell English', Georgia, serif;
+  background: linear-gradient(180deg, #8a2f22, #5a1a12);
+  border: 1px solid var(--oro);
+  color: var(--oro-chiaro);
+}
+
+.btn-elimina-antico:hover {
+  background: linear-gradient(180deg, #a13a2a, #6b2016);
+  border-color: var(--oro-chiaro);
+  color: #fff3d1;
+}
+
+.btn-elimina-antico:disabled,
+.btn-annulla-antico:disabled {
+  opacity: 0.6;
+}

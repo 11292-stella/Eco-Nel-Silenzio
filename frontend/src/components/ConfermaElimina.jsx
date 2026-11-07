@@ -1,7 +1,13 @@
+import { createPortal } from 'react-dom'
+import '../styles/ConfermaElimina.css'
+
 /**
  * Finestra di conferma prima di eliminare un libro.
  * Markup del "modal" di Bootstrap 5.3, ma lo mostra React:
  * se `libro` e' null la finestra non c'e'.
+ *
+ * Usa un PORTALE: l'HTML finisce direttamente nel <body>, fuori dalla cornice.
+ * Serve perche' la cornice ha backdrop-filter, che "intrappola" gli elementi position: fixed.
  *
  * @param libro       il libro da eliminare, oppure null
  * @param inCorso     true mentre la cancellazione e' in corso (pulsanti bloccati)
@@ -14,10 +20,10 @@ export default function ConfermaElimina({ libro, inCorso, errore, onConferma, on
 
   const titolo = libro.titolo.replaceAll('_', ' ')
 
-  return (
+  return createPortal(
     <>
       <div
-        className="modal d-block"
+        className="modal d-block modal-pergamena"
         tabIndex="-1"
         role="dialog"
         aria-modal="true"
@@ -39,7 +45,7 @@ export default function ConfermaElimina({ libro, inCorso, errore, onConferma, on
 
             <div className="modal-body">
               <p className="mb-0">
-                Vuoi davvero eliminare <strong>«{titolo}»</strong>?
+                Vuoi davvero togliere <strong>«{titolo}»</strong> dallo scaffale?
                 Verranno cancellate anche tutte le sue pagine. L'operazione non si può annullare.
               </p>
 
@@ -53,7 +59,7 @@ export default function ConfermaElimina({ libro, inCorso, errore, onConferma, on
             <div className="modal-footer">
               <button
                 type="button"
-                className="btn btn-outline-secondary"
+                className="btn btn-annulla-antico"
                 onClick={onAnnulla}
                 disabled={inCorso}
                 data-testid="conferma-elimina-annulla"
@@ -62,7 +68,7 @@ export default function ConfermaElimina({ libro, inCorso, errore, onConferma, on
               </button>
               <button
                 type="button"
-                className="btn btn-danger"
+                className="btn btn-elimina-antico"
                 onClick={onConferma}
                 disabled={inCorso}
                 data-testid="conferma-elimina-ok"
@@ -76,6 +82,7 @@ export default function ConfermaElimina({ libro, inCorso, errore, onConferma, on
 
       {/* lo sfondo scuro dietro la finestra */}
       <div className="modal-backdrop fade show" />
-    </>
+    </>,
+    document.body
   )
 }

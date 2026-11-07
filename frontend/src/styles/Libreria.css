@@ -20,3 +20,13 @@
   letter-spacing: 10px;
   margin-bottom: 2.5rem;
 }
+
+/* Caricamento e scaffale vuoto: testo chiaro e centrato dentro la cornice */
+.stato-libreria {
+  text-align: center;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: rgba(247, 239, 217, 0.9);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  padding: 2rem 0;
+}

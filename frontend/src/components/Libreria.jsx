@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { elencoLibri, eliminaLibro } from '../api/libri'
 import CardLibro from './CardLibro'
+import CaricaLibro from './CaricaLibro'
 import ConfermaElimina from './ConfermaElimina'
-import '../styles/Libreria.css'
 import CorniceAntica from './CorniceAntica'
+import '../styles/Libreria.css'
 
 /**
  * La "libreria": chiede i libri al backend e mostra una CardLibro per ognuno.
- * Gestisce anche l'eliminazione, con la finestra di conferma.
+ * Permette di caricare un nuovo PDF e di eliminare un libro (con conferma).
  */
 export default function Libreria() {
   const [libri, setLibri] = useState([])          // i libri arrivati dal backend
@@ -39,7 +40,12 @@ export default function Libreria() {
     }
   }, [])
 
-  // Clic su "Elimina" nella card → apre la finestra di conferma
+  // Un libro appena caricato va in testa allo scaffale (l'elenco e' dal piu' recente)
+  function aggiungiLibro(libro) {
+    setLibri((attuali) => [libro, ...attuali])
+  }
+
+  // Clic su "elimina" nella card → apre la finestra di conferma
   function chiediConferma(libro) {
     setErroreEliminazione(null)
     setLibroDaEliminare(libro)
@@ -67,48 +73,38 @@ export default function Libreria() {
     }
   }
 
-  // --- Caricamento: spinner di Bootstrap ---
-  if (caricamento) {
-    return (
-      <div className="d-flex align-items-center gap-2" data-testid="libreria-caricamento">
-        <div className="spinner-border spinner-border-sm" role="status" />
-        <span>Caricamento dei libri...</span>
-      </div>
-    )
-  }
-
-  // --- Errore: avviso rosso ---
-  if (errore) {
-    return (
-      <div className="alert alert-danger" role="alert" data-testid="libreria-errore">
-        {errore}
-      </div>
-    )
-  }
-
-  // --- Nessun libro: avviso neutro ---
-  if (libri.length === 0) {
-    return (
-      <div className="alert alert-secondary" data-testid="libreria-vuota">
-        Nessun libro caricato.
-      </div>
-    )
-  }
-
-   // --- Lo scaffale: una CardLibro per libro, su un foglio di pergamena ---
   return (
     <CorniceAntica>
       <h2 className="libreria-titolo">La tua libreria</h2>
       <p className="libreria-sottotitolo">Ogni storia aspetta la sua voce</p>
       <span className="libreria-fregio" aria-hidden="true">✦ ❦ ✦</span>
 
-      <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 gx-4 gy-5" data-testid="libreria-elenco">
-        {libri.map((libro) => (
-          <div className="col" key={libro.id}>
-            <CardLibro libro={libro} onElimina={chiediConferma} />
-          </div>
-        ))}
-      </div>
+      {/* Il modulo c'e' sempre, anche con lo scaffale vuoto */}
+      <CaricaLibro onCaricato={aggiungiLibro} />
+
+      {/* Sotto, uno solo di questi quattro */}
+      {caricamento ? (
+        <div className="stato-libreria" data-testid="libreria-caricamento">
+          <div className="spinner-border spinner-border-sm me-2" role="status" />
+          Caricamento dei libri...
+        </div>
+      ) : errore ? (
+        <div className="alert alert-danger" role="alert" data-testid="libreria-errore">
+          {errore}
+        </div>
+      ) : libri.length === 0 ? (
+        <div className="stato-libreria" data-testid="libreria-vuota">
+          Lo scaffale è vuoto: carica il tuo primo racconto.
+        </div>
+      ) : (
+        <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 gx-4 gy-5" data-testid="libreria-elenco">
+          {libri.map((libro) => (
+            <div className="col" key={libro.id}>
+              <CardLibro libro={libro} onElimina={chiediConferma} />
+            </div>
+          ))}
+        </div>
+      )}
 
       <ConfermaElimina
         libro={libroDaEliminare}
