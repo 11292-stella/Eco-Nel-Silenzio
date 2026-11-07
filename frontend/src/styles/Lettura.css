@@ -8,18 +8,36 @@
   background: #0d1a20 url('../assets/sfondo-lettura.webp') center bottom / cover no-repeat;
 }
 
-/* --- Sopra il libro: numero di pagina --- */
+/* --- Sopra il libro: il sigillo di ceralacca (ascolta / pausa) --- */
 .lettura-intestazione {
-  text-align: center;
-  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.6rem;            /* spazio per l'etichetta "ascolta" sotto il sigillo */
 }
 
-.lettura-numero {
-  font-family: 'IM Fell English', Georgia, serif;
-  font-style: italic;
-  font-size: 1.2rem;
-  color: var(--oro-chiaro);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+/* il sigillo sta fuori dalla scena del libro: misure in px invece di cqw */
+.lettura-intestazione .sigillo {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: clamp(60px, 6vw, 88px);    /* cresce con lo schermo, ma tra 60 e 88 px */
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.6));
+}
+
+.lettura-intestazione .sigillo:hover {
+  transform: rotate(-8deg) scale(1.07);
+}
+
+.lettura-intestazione .sigillo-etichetta {
+  font-size: 1rem;
+  margin-top: 2px;
+  color: var(--oro-chiaro);                       /* chiaro: ora sta sullo sfondo scuro */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.lettura-intestazione .sigillo-icona {
+  filter: drop-shadow(0 1px 0 rgba(60, 8, 4, 0.8));
 }
 
 /* --- La scena: l'immagine del libro (ritagliata, sfondo trasparente), sempre in proporzione --- */
@@ -27,7 +45,7 @@
   position: relative;
   width: 100%;
   max-width: 1200px;
-  margin: 2vh auto 0;
+  margin: 0 auto;
   aspect-ratio: 1376 / 655;                      /* le proporzioni del libro ritagliato */
   background: url('../assets/libro-aperto.webp') center / contain no-repeat;
   container-type: inline-size;                   /* permette di usare "cqw" qui dentro */
@@ -76,10 +94,16 @@
   color: #7a2f1f;
 }
 
-/* ogni frase e' un pezzo a se': servira' per evidenziare quella che la voce sta leggendo */
+/* ogni frase e' un pezzo a se': la voce evidenzia quella che sta leggendo */
 .frase {
   border-radius: 3px;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* la frase che la voce sta leggendo: un velo dorato, come una luce di candela */
+.frase-letta {
+  background-color: rgba(214, 170, 80, 0.35);
+  box-shadow: 0 0 0 0.15em rgba(214, 170, 80, 0.35);
 }
 
 /* il fregio al posto delle immagini, finche' non ci sono */
@@ -89,13 +113,28 @@
   color: rgba(107, 68, 35, 0.35);
 }
 
-/* --- Sotto il libro: i pulsanti per sfogliare --- */
+/* --- Sotto il libro: i pulsanti per sfogliare e, al centro, il numero di pagina --- */
 .lettura-navigazione {
   display: flex;
   justify-content: space-between;
   align-items: center;
   max-width: 900px;
   margin: 1rem auto 0;
+}
+
+.lettura-centro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.lettura-numero {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--oro-chiaro);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
 .lettura-navigazione .btn-elimina {

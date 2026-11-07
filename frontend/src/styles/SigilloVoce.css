@@ -1,0 +1,88 @@
+/* Il sigillo di ceralacca: avvia e mette in pausa la voce narrante */
+
+.sigillo {
+  position: absolute;
+  left: 50%;
+  top: -1%;
+  z-index: 3;
+  transform: translateX(-50%) rotate(-8deg);
+  width: 8cqw;
+  aspect-ratio: 1;
+  padding: 0;
+  border: none;
+  background: none;
+  display: grid;
+  place-items: center;
+  color: #f4cdb2;
+  cursor: pointer;
+  filter: drop-shadow(0 0.45cqw 0.5cqw rgba(0, 0, 0, 0.6));   /* ombra della cera sulla carta */
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+/* la goccia di cera (SVG con il bordo irregolare) riempie tutto il pulsante */
+.sigillo-cera {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sigillo:hover {
+  transform: translateX(-50%) rotate(-8deg) scale(1.07);
+}
+
+.sigillo:focus-visible {
+  outline: 0.25cqw solid var(--oro-chiaro);
+  outline-offset: 0.3cqw;
+  border-radius: 50%;
+}
+
+/* l'icona impressa nella cera */
+.sigillo-icona {
+  position: relative;
+  width: 34%;
+  height: 34%;
+  filter: drop-shadow(0 0.12cqw 0 rgba(60, 8, 4, 0.8));
+}
+
+/* mentre la voce legge, il sigillo "respira" piano */
+.sigillo.in-ascolto .sigillo-cera {
+  animation: respiro 2.4s ease-in-out infinite;
+}
+
+@keyframes respiro {
+  0%, 100% { filter: brightness(1); }
+  50%      { filter: brightness(1.2); }
+}
+
+.sigillo-etichetta {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) rotate(8deg);
+  margin-top: 0.2cqw;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: 1.2cqw;
+  color: #7a2f1f;
+  white-space: nowrap;
+}
+
+/* telefono: il libro non c'e', il sigillo sta sopra la pagina */
+@media (max-width: 768px) {
+  .sigillo {
+    position: relative;
+    left: auto;
+    top: auto;
+    margin: 0 auto 1.75rem;
+    width: 68px;
+    transform: rotate(-8deg);
+  }
+  .sigillo:hover { transform: rotate(-8deg) scale(1.07); }
+  .sigillo-etichetta { font-size: 0.9rem; margin-top: 2px; color: var(--oro-chiaro); }
+}
+
+.sigillo:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.6) brightness(0.8) drop-shadow(0 0.45cqw 0.5cqw rgba(0, 0, 0, 0.6));
+}
