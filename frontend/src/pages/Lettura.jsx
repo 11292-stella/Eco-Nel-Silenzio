@@ -1,17 +1,45 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { paginaLibro } from '../api/libri'
-import CorniceAntica from '../components/CorniceAntica'
 import '../styles/Lettura.css'
+
+// Quanti caratteri stanno, piu' o meno, nella pagina disegnata del libro.
+// Se il testo esce dalla carta, abbassa questo numero; se avanza spazio, alzalo.
+const CARATTERI_PER_FOGLIO = 650
+
+/**
+ * Divide le frasi di una pagina del PDF in "fogli" che stanno nella pagina del libro.
+ * Una frase non viene mai spezzata a meta'.
+ */
+function dividiInFogli(frasi) {
+  const fogli = []
+  let corrente = []
+  let lunghezza = 0
+
+  for (const frase of frasi) {
+    const l = frase.testo.length + 1
+    if (corrente.length > 0 && lunghezza + l > CARATTERI_PER_FOGLIO) {
+      fogli.push(corrente)
+      corrente = []
+      lunghezza = 0
+    }
+    corrente.push(frase)
+    lunghezza += l
+  }
+  if (corrente.length > 0) fogli.push(corrente)
+
+  return fogli.length > 0 ? fogli : [[]]
+}
 
 /**
  * La pagina di lettura di un libro: /libri/:id
- * Chiede al backend una pagina alla volta e permette di sfogliare avanti e indietro.
+ * Il libro aperto: a sinistra il testo, a destra (piu' avanti) le immagini d'atmosfera.
  */
 export default function Lettura() {
   const { id } = useParams()                  // da "/libri/5" prende "5"
 
-  const [numero, setNumero] = useState(1)     // la pagina che stiamo leggendo
+  const [numero, setNumero] = useState(1)     // la pagina del PDF che stiamo leggendo
+  const [foglio, setFoglio] = useState(0)     // il foglio dentro la pagina (-1 = l'ultimo)
   const [pagina, setPagina] = useState(null)  // il PaginaDto arrivato dal backend
   const [caricamento, setCaricamento] = useState(true)
   const [errore, setErrore] = useState(null)
@@ -37,20 +65,37 @@ export default function Lettura() {
     }
   }, [id, numero])
 
-  // Clic su precedente/successiva: prepara il caricamento e cambia pagina
-  function vaiAPagina(nuovo) {
+  // I fogli si ricalcolano solo quando arriva una pagina nuova
+  const fogli = useMemo(() => dividiInFogli(pagina?.frasi ?? []), [pagina])
+  const totale = pagina?.totalePagine ?? 1
+  const indice = foglio === -1 ? fogli.length - 1 : Math.min(foglio, fogli.length - 1)
+
+  const cePrecedente = indice > 0 || numero > 1
+  const ceSuccessivo = indice < fogli.length - 1 || numero < totale
+
+  // Cambiare pagina del PDF: prepara il caricamento (lo stato lo cambiamo qui, non nell'effetto)
+  function cambiaPagina(nuovo, foglioDiArrivo) {
     setCaricamento(true)
     setErrore(null)
+    setFoglio(foglioDiArrivo)
     setNumero(nuovo)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const totale = pagina?.totalePagine ?? 1
+  function avanti() {
+    if (indice < fogli.length - 1) setFoglio(indice + 1)    // foglio dopo, stessa pagina
+    else cambiaPagina(numero + 1, 0)                        // primo foglio della pagina dopo
+  }
+
+  function indietro() {
+    if (indice > 0) setFoglio(indice - 1)                   // foglio prima, stessa pagina
+    else cambiaPagina(numero - 1, -1)                       // ULTIMO foglio della pagina prima
+  }
 
   return (
-    <CorniceAntica>
+    <section className="lettura">
+           {/* Lo sfondo della scrivania: solo in questa pagina */}
+      <div className="lettura-sfondo" aria-hidden="true" />
       <div className="lettura-intestazione">
-        <h2 className="libreria-titolo">Eco nel Silenzio</h2>
         {pagina && (
           <span className="lettura-numero" data-testid="lettura-numero">
             Pagina {numero} di {totale}
@@ -58,17 +103,25 @@ export default function Lettura() {
         )}
       </div>
 
-      {errore ? (
-        <div className="alert alert-danger" role="alert" data-testid="lettura-errore">
+      {errore && (
+        <div className="alert alert-danger text-center" role="alert" data-testid="lettura-errore">
           {errore}
         </div>
-      ) : (
-        <article className="pagina-libro" data-testid="lettura-pagina" aria-busy={caricamento}>
-          {caricamento && !pagina ? (
-            <p className="text-center fst-italic">Sto aprendo il libro...</p>
+      )}
+
+      <div className="libro-scena" data-testid="lettura-libro">
+        {/* Pagina sinistra: il testo */}
+        <article
+          className="libro-pagina libro-pagina-sx"
+          lang="it"
+          aria-busy={caricamento}
+          data-testid="lettura-pagina"
+        >
+          {!pagina ? (
+            !errore && <p className="fst-italic">Sto aprendo il libro...</p>
           ) : (
             <p className="mb-0">
-              {pagina.frasi.map((frase) => (
+              {fogli[indice].map((frase) => (
                 <span key={frase.numero} className="frase" data-testid="lettura-frase">
                   {frase.testo}{' '}
                 </span>
@@ -76,17 +129,22 @@ export default function Lettura() {
             </p>
           )}
         </article>
-      )}
+
+        {/* Pagina destra: qui arriveranno le immagini d'atmosfera */}
+        <div className="libro-pagina libro-pagina-dx" aria-hidden="true">
+          <span className="libro-fregio">❦</span>
+        </div>
+      </div>
 
       <div className="lettura-navigazione">
         <button
           type="button"
           className="btn btn-leggi"
-          onClick={() => vaiAPagina(numero - 1)}
-          disabled={caricamento || numero <= 1}
+          onClick={indietro}
+          disabled={caricamento || !cePrecedente}
           data-testid="lettura-precedente"
         >
-          ← Pagina precedente
+          ← Indietro
         </button>
 
         <Link to="/" className="btn-elimina" data-testid="lettura-libreria">
@@ -96,13 +154,13 @@ export default function Lettura() {
         <button
           type="button"
           className="btn btn-leggi"
-          onClick={() => vaiAPagina(numero + 1)}
-          disabled={caricamento || numero >= totale}
+          onClick={avanti}
+          disabled={caricamento || !ceSuccessivo}
           data-testid="lettura-successiva"
         >
-          Pagina successiva →
+          Avanti →
         </button>
       </div>
-    </CorniceAntica>
+    </section>
   )
 }
