@@ -16,3 +16,7 @@ ECO_NEL_SILENZIO_PROGRESSI.md
 
 # PDF (mai nel repository: i test creano i PDF in memoria)
 *.pdf
+
+# Servizio voce: i modelli di Piper (decine di MB) e l'audio generato non vanno su Git
+voce/voci/
+voce/audio/
