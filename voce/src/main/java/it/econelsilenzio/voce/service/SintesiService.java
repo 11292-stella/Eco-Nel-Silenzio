@@ -1,40 +1,55 @@
 package it.econelsilenzio.voce.service;
 
 import it.econelsilenzio.voce.config.VoceProperties;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Trasforma una frase in un file mp3 con la voce di Riccardo.
- * Lancia due programmi esterni, come dal terminale:
- *   1. Piper  → testo in .wav
- *   2. ffmpeg → abbassa la tonalita' e converte in .mp3
+ *   1. Piper  → testo in .wav  (chiamata HTTP al server di Piper, sempre acceso)
+ *   2. ffmpeg → abbassa la tonalita' e converte in .mp3 (programma esterno)
  * Gli mp3 restano salvati: la stessa frase non viene generata due volte (cache su disco).
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SintesiService {
 
-    // Oltre questo tempo un programma esterno si considera bloccato
+    // Oltre questo tempo Piper o ffmpeg si considerano bloccati
     private static final long TIMEOUT_SECONDI = 60;
 
     private final VoceProperties props;
+    private final RestClient piperClient;
+
+    public SintesiService(VoceProperties props) {
+        this.props = props;
+
+        // Timeout: se il server di Piper e' spento lo sappiamo in 2 secondi, non restiamo appesi
+        SimpleClientHttpRequestFactory fabbrica = new SimpleClientHttpRequestFactory();
+        fabbrica.setConnectTimeout(Duration.ofSeconds(2));
+        fabbrica.setReadTimeout(Duration.ofSeconds(TIMEOUT_SECONDI));
+
+        this.piperClient = RestClient.builder()
+                .requestFactory(fabbrica)
+                .build();
+    }
 
     /**
      * Restituisce il percorso dell'mp3 della frase: lo genera solo se non esiste gia'.
@@ -56,10 +71,17 @@ public class SintesiService {
             try {
                 long inizio = System.currentTimeMillis();
                 generaWav(testo, wav);
+                long dopoPiper = System.currentTimeMillis();
                 convertiInMp3(wav, mp3Temp);
+                long fine = System.currentTimeMillis();
+
                 // Solo alla fine diventa il file "vero": nessuno legge mai un mp3 a meta'
                 Files.move(mp3Temp, mp3, StandardCopyOption.REPLACE_EXISTING);
-                log.info("Audio generato in {} ms: {}", System.currentTimeMillis() - inizio, mp3.getFileName());
+
+                // Tempi separati: cosi' sappiamo quanto pesa Piper e quanto ffmpeg
+                log.info("Audio generato in {} ms (Piper {} ms, ffmpeg {} ms, {} caratteri): {}",
+                        fine - inizio, dopoPiper - inizio, fine - dopoPiper,
+                        testo.length(), mp3.getFileName());
                 return mp3;
             } finally {
                 Files.deleteIfExists(wav);
@@ -70,34 +92,41 @@ public class SintesiService {
         }
     }
 
-    // --- 1. Piper: testo → wav ---
+    // --- 1. Piper: testo → wav, con una chiamata al suo server HTTP ---
     private void generaWav(String testo, Path wav) throws IOException {
         VoceProperties.Piper piper = props.piper();
-        List<String> comando = List.of(
-                piper.comando(), "-m", "piper",
-                "-m", piper.modello(),
-                "--length-scale", numero(piper.lengthScale()),
-                "--noise-scale", numero(piper.noiseScale()),
-                "-f", wav.toString()
+
+        // Lo stesso JSON che abbiamo provato da PowerShell
+        Map<String, Object> richiesta = Map.of(
+                "text", testo,
+                "length_scale", piper.lengthScale(),
+                "noise_scale", piper.noiseScale()
         );
 
-        ProcessBuilder pb = new ProcessBuilder(comando).redirectErrorStream(true);
-        // Python su Windows legge l'input in cp1252: lo obblighiamo a usare UTF-8 (accenti, «»)
-        pb.environment().put("PYTHONUTF8", "1");
-        pb.environment().put("PYTHONIOENCODING", "utf-8");
-
-        Process processo = pb.start();
-        // Il testo arriva a Piper dallo "standard input", come con: echo "testo" | python -m piper ...
-        try (OutputStream in = processo.getOutputStream()) {
-            in.write(testo.getBytes(StandardCharsets.UTF_8));
+        byte[] audio;
+        try {
+            audio = piperClient.post()
+                    .uri(piper.url())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(richiesta)                      // la Map diventa JSON (UTF-8: accenti e «» ok)
+                    .retrieve()
+                    .body(byte[].class);                  // la risposta e' il file .wav
+        } catch (RestClientException e) {
+            // Server spento, errore di Piper, timeout... → 503, il frontend passa alla voce del browser
+            log.error("Il server di Piper non risponde su {}: {}", piper.url(), e.getMessage());
+            throw new SintesiException("Il server di Piper non e' disponibile", e);
         }
-        aspetta(processo, "Piper");
+
+        if (audio == null || audio.length == 0) {
+            throw new SintesiException("Piper ha restituito un audio vuoto");
+        }
+        Files.write(wav, audio);
     }
 
     // --- 2. ffmpeg: wav → mp3, con la voce piu' bassa ---
     private void convertiInMp3(Path wav, Path mp3) throws IOException {
         VoceProperties.Ffmpeg ffmpeg = props.ffmpeg();
-        // es. 16000 * 0.88 = 14080: l'audio "suona" piu' lento, quindi piu' basso
+        // es. 16000 * 0.92 = 14720: l'audio "suona" piu' lento, quindi piu' basso
         long frequenzaAbbassata = Math.round(ffmpeg.frequenza() * ffmpeg.tonalita());
         String filtro = "asetrate=" + frequenzaAbbassata + ",aresample=" + ffmpeg.frequenza();
 
@@ -142,10 +171,5 @@ public class SintesiService {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);              // SHA-256 c'e' sempre in Java
         }
-    }
-
-    // 1.1 → "1.1" sempre col punto (con il Locale italiano diventerebbe "1,1" e Piper non lo capirebbe)
-    private String numero(double valore) {
-        return String.format(Locale.ROOT, "%s", valore);
     }
 }
