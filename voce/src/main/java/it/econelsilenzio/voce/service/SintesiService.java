@@ -163,7 +163,8 @@ public class SintesiService {
 
     // Il nome del file: un'impronta (SHA-256) del testo e delle impostazioni della voce.
     // Stessa frase + stessa voce = stesso nome. Se cambi tonalita', i file si rigenerano.
-    private String nomeFile(String testo) {
+    // Non e' private: il test della cache lo usa per sapere come si chiamera' l'mp3
+    String nomeFile(String testo) {
         String chiave = testo + "|" + props.piper() + "|" + props.ffmpeg();
         try {
             byte[] hash = MessageDigest.getInstance("SHA-256").digest(chiave.getBytes(StandardCharsets.UTF_8));
