@@ -9,7 +9,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,7 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.nio.file.Path;
 import java.time.Duration;
 
-@Validated
+// Niente @Validated: @NotBlank e @Size li controlla Spring MVC da solo e lancia
+// HandlerMethodValidationException, che il GestoreErrori trasforma in 400.
+// Con @Validated arrivava ConstraintViolationException → 500 (bug trovato da VoceControllerTest)
 @RestController
 @RequestMapping("/api/voce")
 @RequiredArgsConstructor
