@@ -5,6 +5,7 @@ import CaricaLibro from './CaricaLibro'
 import ConfermaElimina from './ConfermaElimina'
 import CorniceAntica from './CorniceAntica'
 import '../styles/Libreria.css'
+import { cancellaSegnalibro } from '../utils/segnalibro'
 
 /**
  * La "libreria": chiede i libri al backend e mostra una CardLibro per ognuno.
@@ -64,6 +65,7 @@ export default function Libreria() {
 
     try {
       await eliminaLibro(libroDaEliminare.id)
+      cancellaSegnalibro(libroDaEliminare.id)   // niente segnalibri di libri che non esistono piu'
       setLibri((attuali) => attuali.filter((l) => l.id !== libroDaEliminare.id))
       setLibroDaEliminare(null)   // chiude la finestra
     } catch (err) {

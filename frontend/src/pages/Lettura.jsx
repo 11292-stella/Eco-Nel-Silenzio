@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { paginaLibro } from '../api/libri'
 import ControlliLettura from '../components/ControlliLettura'
 import { useVoceNarrante } from '../hooks/useVoceNarrante'
+import { leggiSegnalibro, salvaSegnalibro } from '../utils/segnalibro'
 import '../styles/Lettura.css'
 
 // Quanti caratteri stanno, piu' o meno, nella pagina disegnata del libro.
@@ -36,13 +37,14 @@ function dividiInFogli(frasi) {
 /**
  * La pagina di lettura di un libro: /libri/:id
  * Il libro aperto: a sinistra il testo, a destra (piu' avanti) le immagini d'atmosfera.
- * La voce narrante (sigillo di ceralacca) sta nell'hook useVoceNarrante.
+ * Sotto il libro la plancia con tutti i comandi; la voce sta nell'hook useVoceNarrante.
  */
 export default function Lettura() {
   const { id } = useParams()                  // da "/libri/5" prende "5"
 
-  const [numero, setNumero] = useState(1)     // la pagina del PDF che stiamo leggendo
-  const [foglio, setFoglio] = useState(0)     // il foglio dentro la pagina (-1 = l'ultimo)
+  // Si riparte dal segnalibro (se c'e'): la funzione dentro useState gira solo la prima volta
+  const [numero, setNumero] = useState(() => leggiSegnalibro(id).numero)   // la pagina del PDF
+  const [foglio, setFoglio] = useState(() => leggiSegnalibro(id).foglio)   // il foglio (-1 = l'ultimo)
   const [pagina, setPagina] = useState(null)  // il PaginaDto arrivato dal backend
   const [caricamento, setCaricamento] = useState(true)
   const [errore, setErrore] = useState(null)
@@ -76,6 +78,16 @@ export default function Lettura() {
   const cePrecedente = indice > 0 || numero > 1
   const ceSuccessivo = indice < fogli.length - 1 || numero < totale
 
+  // Quanto si e' letto, tra 0 e 1: le pagine gia' finite + i fogli letti di quella attuale
+  const avanzamento = pagina
+    ? Math.min(((numero - 1) + (indice + 1) / fogli.length) / totale, 1)
+    : 0
+
+  // Ogni volta che cambia il foglio visibile, aggiorna il segnalibro
+  useEffect(() => {
+    if (pagina) salvaSegnalibro(id, numero, indice)
+  }, [id, numero, indice, pagina])
+
   // --- La voce narrante: legge il foglio visibile e, finito, gira pagina da sola ---
   const voce = useVoceNarrante({
     frasi: fogli[indice],
@@ -104,13 +116,17 @@ export default function Lettura() {
     else cambiaPagina(numero - 1, -1)                       // ULTIMO foglio della pagina prima
   }
 
+  // "Ricomincia dall'inizio": prima pagina, primo foglio
+  function ricomincia() {
+    voce.azzera()
+    if (numero === 1) setFoglio(0)
+    else cambiaPagina(1, 0)
+  }
+
   return (
     <section className="lettura">
       {/* Lo sfondo della scrivania: solo in questa pagina */}
       <div className="lettura-sfondo" aria-hidden="true" />
-
-      {/* Sopra il libro: sigillo (ascolta / pausa) e, piu' avanti, frase precedente / successiva e velocita' */}
-      <ControlliLettura voce={voce} disabled={!pagina} />
 
       {errore && (
         <div className="alert alert-danger text-center" role="alert" data-testid="lettura-errore">
@@ -149,38 +165,20 @@ export default function Lettura() {
         </div>
       </div>
 
-      <div className="lettura-navigazione">
-        <button
-          type="button"
-          className="btn btn-leggi"
-          onClick={indietro}
-          disabled={caricamento || !cePrecedente}
-          data-testid="lettura-precedente"
-        >
-          ← Indietro
-        </button>
-
-        <div className="lettura-centro">
-          {pagina && (
-            <span className="lettura-numero" data-testid="lettura-numero">
-              Pagina {numero} di {totale}
-            </span>
-          )}
-          <Link to="/" className="btn-elimina" data-testid="lettura-libreria">
-            torna alla libreria
-          </Link>
-        </div>
-
-        <button
-          type="button"
-          className="btn btn-leggi"
-          onClick={avanti}
-          disabled={caricamento || !ceSuccessivo}
-          data-testid="lettura-successiva"
-        >
-          Avanti →
-        </button>
-      </div>
+      {/* Sotto il libro: la plancia con tutti i comandi */}
+      <ControlliLettura
+        voce={voce}
+        pronta={pagina !== null}
+        caricamento={caricamento}
+        numero={numero}
+        totale={totale}
+        avanzamento={avanzamento}
+        cePrecedente={cePrecedente}
+        ceSuccessivo={ceSuccessivo}
+        onIndietro={indietro}
+        onAvanti={avanti}
+        onRicomincia={ricomincia}
+      />
     </section>
   )
 }

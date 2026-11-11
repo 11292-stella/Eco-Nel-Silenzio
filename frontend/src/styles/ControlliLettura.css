@@ -1,0 +1,293 @@
+/*
+ * La plancia di lettura: galleggia in basso, un po' sopra il libro, e sparisce mentre si ascolta.
+ * Pergamena con il bordo d'ottone e le borchie agli angoli,
+ * pulsanti di cuoio rosso con il filo d'oro, nastro di avanzamento come uno slider antico.
+ */
+
+/* ================= Il blocco di pergamena ================= */
+.plancia {
+  /* Fissa in basso al centro dello schermo, un po' sopra il libro: resta li' anche se la pagina scorre */
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  z-index: 20;
+  width: min(620px, calc(100% - 2rem));            /* 620 px, ma mai piu' larga dello schermo */
+  --scala-plancia: 0.9;
+  transform: translateX(-50%) scale(var(--scala-plancia));   /* centrata e rimpicciolita */
+  transform-origin: bottom center;                     /* centrata */
+  transition: opacity 0.5s ease, transform 0.5s ease;
+
+  padding: 0.6rem 1.25rem 0.45rem;
+  color: var(--inchiostro);
+
+  /* dal primo all'ultimo: le 4 borchie d'ottone agli angoli, la luce al centro, la carta */
+  background:
+    radial-gradient(circle at 10px 10px, #fff1c4 0 1.5px, #c9a34e 2px 3.5px, #6b4a1a 4px, transparent 5px),
+    radial-gradient(circle at calc(100% - 10px) 10px, #fff1c4 0 1.5px, #c9a34e 2px 3.5px, #6b4a1a 4px, transparent 5px),
+    radial-gradient(circle at 10px calc(100% - 10px), #fff1c4 0 1.5px, #c9a34e 2px 3.5px, #6b4a1a 4px, transparent 5px),
+    radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), #fff1c4 0 1.5px, #c9a34e 2px 3.5px, #6b4a1a 4px, transparent 5px),
+    radial-gradient(ellipse at center, rgba(255, 250, 235, 0.65) 0%, rgba(255, 250, 235, 0) 60%, rgba(110, 75, 35, 0.35) 100%),
+    var(--carta);
+
+  border: 2px solid #8a6a2e;                       /* cornice d'ottone scuro */
+  border-radius: 8px;
+  box-shadow:
+    inset 0 0 0 1.5px var(--oro-chiaro),           /* filo d'oro interno */
+    inset 0 0 20px rgba(110, 75, 35, 0.4),         /* bordi della carta piu' scuri */
+    0 8px 20px rgba(0, 0, 0, 0.6);                 /* ombra sulla scrivania */
+}
+
+/* Mentre si ascolta e nessuno tocca niente: sparisce scendendo un po' */
+.plancia-nascosta {
+  opacity: 0;
+    transform: translate(-50%, 1.5rem) scale(var(--scala-plancia));
+  pointer-events: none;                            /* invisibile = non cliccabile per sbaglio */
+}
+
+/* Chi usa la tastiera (Tab) la vede sempre */
+.plancia-nascosta:focus-within {
+  opacity: 1;
+   transform: translateX(-50%) scale(var(--scala-plancia));
+  pointer-events: auto;
+}
+
+/* Chi ha chiesto al sistema "riduci movimento": solo dissolvenza, senza scivolare */
+@media (prefers-reduced-motion: reduce) {
+  .plancia,
+  .plancia-nascosta {
+        transform: translateX(-50%) scale(var(--scala-plancia));
+    transition: opacity 0.3s ease;
+  }
+}
+
+/* ================= Riga 1: sfogliare e la voce ================= */
+.plancia-comandi {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.plancia-voce {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* --- Indietro / Avanti: cuoio rosso con il filo d'oro --- */
+.btn-cuoio {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 0.95rem;
+  color: var(--oro-chiaro);
+  padding: 0.15rem 0.75rem;
+  background: linear-gradient(180deg, #8a2f22 0%, #5a1a12 100%);
+  border: 1.5px solid var(--oro);
+  border-radius: 5px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 230, 170, 0.3),      /* secondo filo, piu' sottile */
+    0 2px 4px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  transition: filter 0.2s ease, transform 0.1s ease;
+}
+
+.btn-cuoio:hover:not(:disabled),
+.btn-cuoio:focus-visible {
+  filter: brightness(1.15);
+  color: #fff3d1;
+}
+
+.btn-cuoio:active:not(:disabled) {
+  transform: translateY(1px);                      /* "premuto" */
+}
+
+.btn-cuoio:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- ⏮ ⏭: borchie rotonde, cuoio rosso dentro un anello d'ottone --- */
+.borchia {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--oro-chiaro);
+  background: radial-gradient(circle at 35% 30%, #a3402f 0%, #5a1a12 70%);
+  border: 2px solid var(--oro);
+  box-shadow:
+    0 0 0 1.5px #6b4a1a,                           /* bordo scuro intorno all'anello */
+    inset 0 1px 2px rgba(255, 220, 160, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.4);
+  transition: filter 0.2s ease, transform 0.1s ease;
+}
+
+/* le frecce dentro le borchie: piu' piccole dei 18px scritti nell'SVG */
+.borchia svg {
+  width: 13px;
+  height: 13px;
+}
+
+.borchia:hover:not(:disabled),
+.borchia:focus-visible {
+  filter: brightness(1.2);
+}
+
+.borchia:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.borchia:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* --- La velocita': targhetta di cuoio a pillola --- */
+.controllo-velocita {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 0.9rem;
+  min-width: 3.6rem;                               /* non "balla" quando cambia da 1× a 1,15× */
+  padding: 0.05rem 0.55rem;
+  color: var(--oro-chiaro);
+  background: linear-gradient(180deg, #5c3b20 0%, #3b2614 100%);
+  border: 1.5px solid var(--oro);
+  border-radius: 999px;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  transition: filter 0.2s ease;
+}
+
+.controllo-velocita:hover,
+.controllo-velocita:focus-visible {
+  filter: brightness(1.2);
+  color: #fff3d1;
+}
+
+/* --- Il sigillo dentro la plancia (fuori dalla scena del libro: misure in px) --- */
+.plancia .sigillo {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: 54px;
+  transform: rotate(-8deg);
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5));
+}
+
+.plancia .sigillo:hover {
+  transform: rotate(-8deg) scale(1.07);
+}
+
+.plancia .sigillo-etichetta {
+  font-size: 0.8rem;
+  margin-top: 0;
+  color: var(--inchiostro);                        /* scuro: sta sulla pergamena */
+  text-shadow: none;
+}
+
+.plancia .sigillo-icona {
+  filter: drop-shadow(0 1px 0 rgba(60, 8, 4, 0.8));
+}
+
+/* ================= Riga 2: nastro di avanzamento ================= */
+.plancia-avanzamento {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.7rem;                              /* spazio per "ascolta" sotto il sigillo */
+}
+
+/* il binario: rosso scuro con il bordo d'oro */
+.nastro {
+  flex: 1;
+  height: 6px;
+  background: linear-gradient(180deg, #3d120c 0%, #6b2016 100%);
+  border: 1px solid var(--oro);
+  border-radius: 999px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* la parte gia' letta: oro */
+.nastro-pieno {
+  position: relative;
+  height: 100%;
+  background: linear-gradient(90deg, #b8862f 0%, var(--oro-chiaro) 100%);
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+/* il "cursore" d'oro in fondo alla parte letta */
+.nastro-pieno::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3d1 0%, var(--oro) 55%, #8a6a2e 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.plancia-numero {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  white-space: nowrap;                             /* "Pagina 1 di 3" sempre su una riga */
+}
+
+/* ================= Riga 3: libreria e ricomincia ================= */
+.plancia-collegamenti {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 0.35rem;
+  padding-top: 0.3rem;
+  border-top: 1px dashed rgba(110, 75, 35, 0.35);  /* riga tratteggiata, come una cucitura */
+}
+
+.collegamento-inchiostro {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'EB Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--legno);
+  text-decoration: none;
+}
+
+.collegamento-inchiostro:hover,
+.collegamento-inchiostro:focus-visible {
+  color: #7a2f1f;                                  /* rosso mattone, come la navbar */
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ================= Telefono ================= */
+@media (max-width: 768px) {
+  .plancia {
+    padding: 0.6rem 0.9rem 0.45rem;
+  }
+
+  /* la voce sopra, Indietro e Avanti sotto, affiancati */
+  .plancia-comandi {
+    flex-wrap: wrap;
+  }
+
+  .plancia-voce {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-cuoio {
+    flex: 1;
+  }
+
+  .plancia-collegamenti {
+    gap: 1.5rem;
+  }
+}

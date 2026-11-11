@@ -5,6 +5,10 @@ import { urlVoce } from "../api/voce";
 const VOCE_BROWSER =
   typeof window !== "undefined" && "speechSynthesis" in window;
 
+// Le velocita' disponibili (1 = normale)
+export const VELOCITA = [0.8, 1, 1.15, 1.3];
+const CHIAVE_VELOCITA = "eco-velocita";
+
 // Una voce italiana, se il sistema ne ha una
 function voceItaliana() {
   return (
@@ -12,6 +16,24 @@ function voceItaliana() {
       .getVoices()
       .find((v) => v.lang.toLowerCase().startsWith("it")) ?? null
   );
+}
+
+// La velocita' salvata nel browser; se manca o e' strana, 1
+function leggiVelocita() {
+  try {
+    const salvata = Number(localStorage.getItem(CHIAVE_VELOCITA));
+    return VELOCITA.includes(salvata) ? salvata : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function salvaVelocita(valore) {
+  try {
+    localStorage.setItem(CHIAVE_VELOCITA, String(valore));
+  } catch {
+    // storage non disponibile: la velocita' vale solo finche' la pagina resta aperta
+  }
 }
 
 /**
@@ -23,16 +45,28 @@ function voceItaliana() {
  * @param ceSuccessivo  true se dopo questo foglio c'e' altro da leggere
  * @param onFineFoglio  chiamata quando il foglio e' finito (per girare pagina)
  *
- * @returns inAscolto   la voce sta leggendo?
- *          fraseLetta  il numero della frase da evidenziare (o null)
- *          alterna()   ascolta / pausa (il clic sul sigillo)
- *          azzera()    riparte dalla prima frase, senza evidenziazione (cambio di foglio a mano)
+ * @returns inAscolto          la voce sta leggendo?
+ *          fraseLetta         il numero della frase da evidenziare (o null)
+ *          alterna()          ascolta / pausa (il clic sul sigillo)
+ *          azzera()           riparte dalla prima frase, senza evidenziazione (cambio di foglio a mano)
+ *          velocita           la velocita' attuale (es. 1.15)
+ *          prossimaVelocita() passa alla velocita' successiva della lista (dopo l'ultima torna alla prima)
+ *          fraseSuccessiva()  frase dopo (all'ultima del foglio gira pagina)
+ *          frasePrecedente()  frase prima (sulla prima la ricomincia)
  */
 export function useVoceNarrante({ frasi, pronto, ceSuccessivo, onFineFoglio }) {
   const [inAscolto, setInAscolto] = useState(false);
   const [fraseLetta, setFraseLetta] = useState(null);
+  const [velocita, setVelocita] = useState(leggiVelocita);
+  // Cambia a ogni salto di frase (⏮ ⏭): e' tra le dipendenze dell'effetto, cosi' la lettura riparte dalla frase nuova
+  const [giro, setGiro] = useState(0);
   const daFrase = useRef(0); // da quale frase del foglio ripartire
   const riccardoOk = useRef(true); // false se il servizio voce non ha risposto
+
+  // La velocita' la legge l'effetto della voce, ma cambiarla NON deve far ripartire la lettura:
+  // per questo sta anche in un ref, che l'effetto legge senza averlo tra le dipendenze
+  const velocitaRef = useRef(velocita);
+  const audioRef = useRef(null); // l'mp3 che sta suonando, per cambiargli la velocita' al volo
 
   // L'effetto della voce deve poter girare pagina da solo: gli passiamo sempre l'ultima versione della funzione
   const onFineFoglioRef = useRef(onFineFoglio);
@@ -74,6 +108,9 @@ export function useVoceNarrante({ frasi, pronto, ceSuccessivo, onFineFoglio }) {
           ? prossimo.audio
           : new Audio(urlVoce(frasi[i].testo));
       audioCorrente = audio;
+      audioRef.current = audio;
+      // piu' veloce o piu' lento, ma con la stessa tonalita' (il browser la mantiene da solo)
+      audio.playbackRate = velocitaRef.current;
 
       // Intanto prepariamo la frase dopo: quando questa finisce, l'audio e' gia' pronto
       if (i + 1 < frasi.length) {
@@ -106,7 +143,8 @@ export function useVoceNarrante({ frasi, pronto, ceSuccessivo, onFineFoglio }) {
       const voce = new SpeechSynthesisUtterance(frasi[i].testo);
       voce.lang = "it-IT";
       voce.voice = voceItaliana();
-      voce.rate = 0.95; // un po' piu' lenta: e' un racconto
+      // 0.95 = un po' piu' lenta, da racconto; la velocita' scelta vale dalla frase successiva
+      voce.rate = 0.95 * velocitaRef.current;
 
       voce.onstart = () => {
         if (!annullato) setFraseLetta(frasi[i].numero);
@@ -136,13 +174,14 @@ export function useVoceNarrante({ frasi, pronto, ceSuccessivo, onFineFoglio }) {
 
     leggi(daFrase.current);
 
-    // Pausa, cambio di foglio o uscita dalla pagina: la voce si ferma
+    // Pausa, cambio di foglio, salto di frase o uscita dalla pagina: la voce si ferma
     return () => {
       annullato = true;
       audioCorrente?.pause();
+      audioRef.current = null;
       if (VOCE_BROWSER) window.speechSynthesis.cancel();
     };
-  }, [inAscolto, pronto, frasi, ceSuccessivo]);
+  }, [inAscolto, pronto, frasi, ceSuccessivo, giro]);
 
   // Clic sul sigillo: ascolta / pausa. In pausa la frase resta evidenziata e si riparte da li'
   function alterna() {
@@ -156,5 +195,52 @@ export function useVoceNarrante({ frasi, pronto, ceSuccessivo, onFineFoglio }) {
     setFraseLetta(null);
   }
 
-  return { inAscolto, fraseLetta, alterna, azzera };
+  // Nuova velocita': vale SUBITO per Riccardo (anche a meta' frase), dalla frase dopo per la voce del browser
+  function cambiaVelocita(valore) {
+    setVelocita(valore);
+    velocitaRef.current = valore;
+    salvaVelocita(valore);
+    if (audioRef.current) audioRef.current.playbackRate = valore;
+  }
+
+  // Clic sul pulsante della velocita': 0.8 → 1 → 1.15 → 1.3 → di nuovo 0.8
+  function prossimaVelocita() {
+    const posizione = VELOCITA.indexOf(velocita);
+    cambiaVelocita(VELOCITA[(posizione + 1) % VELOCITA.length]);
+  }
+
+  // Salta a una frase del foglio: la illumina e, se la voce sta leggendo, riparte da li'
+  function vaiAFrase(i) {
+    daFrase.current = i;
+    setFraseLetta(frasi[i].numero);
+    setGiro((g) => g + 1);
+  }
+
+  // ⏭ Frase dopo; all'ultima del foglio si gira pagina (come quando la voce finisce il foglio)
+  function fraseSuccessiva() {
+    if (frasi.length === 0) return;
+    const dopo = daFrase.current + 1;
+    if (dopo < frasi.length) {
+      vaiAFrase(dopo);
+    } else if (ceSuccessivo) {
+      onFineFoglioRef.current();
+    }
+  }
+
+  // ⏮ Frase prima; sulla prima frase del foglio la ricomincia
+  function frasePrecedente() {
+    if (frasi.length === 0) return;
+    vaiAFrase(Math.max(daFrase.current - 1, 0));
+  }
+
+  return {
+    inAscolto,
+    fraseLetta,
+    alterna,
+    azzera,
+    velocita,
+    prossimaVelocita,
+    fraseSuccessiva,
+    frasePrecedente,
+  };
 }
