@@ -13,6 +13,7 @@ node_modules/
 
 # Appunti personali (non pubblici)
 ECO_NEL_SILENZIO_PROGRESSI.md
+ECO_NEL_SILENZIO_PIANO.md
 
 # PDF (mai nel repository: i test creano i PDF in memoria)
 *.pdf
