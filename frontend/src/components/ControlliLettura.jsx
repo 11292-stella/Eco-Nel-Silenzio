@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import SigilloVoce from './SigilloVoce'
 import { useInattivita } from '../hooks/useInattivita'
+import { useSchermoIntero } from '../hooks/useSchermoIntero'
 import '../styles/ControlliLettura.css'
 
 /**
@@ -10,7 +11,7 @@ import '../styles/ControlliLettura.css'
  *
  *   [◀ Indietro]   (⏮)  (SIGILLO)  (⏭)  [1×]   [Avanti ▶]
  *        ━━━━━━━━━━━━━●──────────   Pagina 1 di 3
- *          ↶ torna alla libreria     ⟲ ricomincia
+ *     ↶ torna alla libreria   ⟲ ricomincia   ⛶ schermo intero
  *
  * @param voce              quello che restituisce useVoceNarrante
  * @param pronta            false finche' la pagina non e' arrivata
@@ -32,11 +33,15 @@ export default function ControlliLettura({
   const percentuale = Math.round(avanzamento * 100)
   const allInizio = !cePrecedente
 
-  // La plancia sparisce solo mentre la voce legge, se nessuno tocca niente da 3 secondi
-  // e il mouse non e' sopra la plancia
+    // Modalita' immersiva: schermo intero e navbar nascosta
+  const schermo = useSchermoIntero()
+
+  // La plancia sparisce se nessuno tocca niente da 3 secondi e il mouse non e' sopra:
+  // - normalmente solo mentre la voce legge (in pausa servono Avanti / Indietro)
+  // - a schermo intero sempre: resta solo il libro
   const inattivo = useInattivita(3000)
   const [mouseSopra, setMouseSopra] = useState(false)
-  const nascosta = voce.inAscolto && inattivo && !mouseSopra
+  const nascosta = (voce.inAscolto || schermo.attivo) && inattivo && !mouseSopra
 
   return (
     <div
@@ -132,11 +137,12 @@ export default function ControlliLettura({
         )}
       </div>
 
-      {/* --- Riga 3: uscire o ricominciare --- */}
+      {/* --- Riga 3: uscire, ricominciare, schermo intero --- */}
       <div className="plancia-collegamenti">
         <Link to="/" className="collegamento-inchiostro" data-testid="lettura-libreria">
           ↶ torna alla libreria
         </Link>
+
         {!allInizio && (
           <button
             type="button"
@@ -146,6 +152,19 @@ export default function ControlliLettura({
             data-testid="lettura-ricomincia"
           >
             ⟲ ricomincia
+          </button>
+        )}
+
+        {/* Solo dove il browser lo permette (non su iPhone) */}
+        {schermo.supportato && (
+          <button
+            type="button"
+            className="collegamento-inchiostro"
+            onClick={schermo.alterna}
+            aria-pressed={schermo.attivo}
+            data-testid="lettura-schermo-intero"
+          >
+            ⛶ {schermo.attivo ? 'esci dallo schermo intero' : 'schermo intero'}
           </button>
         )}
       </div>

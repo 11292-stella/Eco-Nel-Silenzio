@@ -38,6 +38,7 @@ function dividiInFogli(frasi) {
  * La pagina di lettura di un libro: /libri/:id
  * Il libro aperto: a sinistra il testo, a destra (piu' avanti) le immagini d'atmosfera.
  * Sotto il libro la plancia con tutti i comandi; la voce sta nell'hook useVoceNarrante.
+ * Sfogliando, un foglio di pergamena gira sulla rilegatura.
  */
 export default function Lettura() {
   const { id } = useParams()                  // da "/libri/5" prende "5"
@@ -48,6 +49,10 @@ export default function Lettura() {
   const [pagina, setPagina] = useState(null)  // il PaginaDto arrivato dal backend
   const [caricamento, setCaricamento] = useState(true)
   const [errore, setErrore] = useState(null)
+
+  // Il foglio che gira: { verso: 'avanti' | 'indietro', chiave } oppure null.
+  // La chiave cambia a ogni giro, cosi' React crea un elemento nuovo e l'animazione riparte da capo
+  const [sfoglio, setSfoglio] = useState(null)
 
   // Riparte ogni volta che cambia il libro (id) o la pagina (numero).
   // Qui dentro si aggiorna lo stato solo con la risposta del server (then / catch / finally).
@@ -96,6 +101,11 @@ export default function Lettura() {
     onFineFoglio: avanti,
   })
 
+  // Fa partire l'animazione del foglio che gira
+  function sfoglia(verso) {
+    setSfoglio((prima) => ({ verso, chiave: (prima?.chiave ?? 0) + 1 }))
+  }
+
   // Cambiare pagina del PDF: prepara il caricamento (lo stato lo cambiamo qui, non nell'effetto)
   function cambiaPagina(nuovo, foglioDiArrivo) {
     setCaricamento(true)
@@ -106,12 +116,14 @@ export default function Lettura() {
 
   function avanti() {
     voce.azzera()
+    sfoglia('avanti')
     if (indice < fogli.length - 1) setFoglio(indice + 1)    // foglio dopo, stessa pagina
     else cambiaPagina(numero + 1, 0)                        // primo foglio della pagina dopo
   }
 
   function indietro() {
     voce.azzera()
+    sfoglia('indietro')
     if (indice > 0) setFoglio(indice - 1)                   // foglio prima, stessa pagina
     else cambiaPagina(numero - 1, -1)                       // ULTIMO foglio della pagina prima
   }
@@ -119,6 +131,7 @@ export default function Lettura() {
   // "Ricomincia dall'inizio": prima pagina, primo foglio
   function ricomincia() {
     voce.azzera()
+    sfoglia('indietro')
     if (numero === 1) setFoglio(0)
     else cambiaPagina(1, 0)
   }
@@ -135,9 +148,11 @@ export default function Lettura() {
       )}
 
       <div className="libro-scena" data-testid="lettura-libro">
-        {/* Pagina sinistra: il testo */}
+        {/* Pagina sinistra: il testo.
+            La key cambia a ogni foglio: il testo nuovo "compare" mentre il foglio che gira atterra */}
         <article
-          className="libro-pagina libro-pagina-sx"
+          key={`${numero}-${indice}`}
+          className="libro-pagina libro-pagina-sx testo-compare"
           lang="it"
           aria-busy={caricamento}
           data-testid="lettura-pagina"
@@ -163,6 +178,17 @@ export default function Lettura() {
         <div className="libro-pagina libro-pagina-dx" aria-hidden="true">
           <span className="libro-fregio">❦</span>
         </div>
+
+        {/* Il foglio che gira sulla rilegatura: c'e' solo durante l'animazione, poi si toglie da solo */}
+        {sfoglio && (
+          <div
+            key={sfoglio.chiave}
+            className={`foglio-che-gira foglio-${sfoglio.verso}`}
+            onAnimationEnd={() => setSfoglio(null)}
+            aria-hidden="true"
+            data-testid="lettura-foglio-che-gira"
+          />
+        )}
       </div>
 
       {/* Sotto il libro: la plancia con tutti i comandi */}

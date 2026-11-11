@@ -77,3 +77,9 @@
     margin: 0.3rem 0 0;
   }
 }
+
+/* Modalita' immersiva: a schermo intero la navbar sparisce, restano solo libro e plancia.
+   :fullscreen vale per l'elemento a schermo intero, cioe' tutta la pagina (:root = <html>) */
+:root:fullscreen .navbar-eco {
+  display: none;
+}

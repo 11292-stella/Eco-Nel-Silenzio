@@ -45,7 +45,7 @@
 }
 
 /* Chi usa la tastiera (Tab) la vede sempre */
-.plancia-nascosta:focus-within {
+.plancia-nascosta:has(:focus-visible) {
   opacity: 1;
    transform: translateX(-50%) scale(var(--scala-plancia));
   pointer-events: auto;

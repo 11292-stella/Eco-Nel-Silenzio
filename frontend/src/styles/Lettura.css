@@ -1,4 +1,10 @@
-/* La pagina di lettura: un libro aperto sulla scrivania, testo a sinistra e immagini a destra */
+/* La pagina di lettura: un libro aperto sulla scrivania, testo a sinistra e immagini a destra.
+   I comandi sono nella plancia (ControlliLettura.css). */
+
+.lettura {
+  /* spazio in fondo: scorrendo fino alla fine, il libro sale sopra la plancia fissa */
+  padding-bottom: 9rem;
+}
 
 /* --- Lo sfondo della scrivania, solo in questa pagina: copre il muro della libreria --- */
 .lettura-sfondo {
@@ -6,38 +12,6 @@
   inset: 0;                 /* tutto lo schermo */
   z-index: -1;              /* dietro a navbar e libro */
   background: #0d1a20 url('../assets/sfondo-lettura.webp') center bottom / cover no-repeat;
-}
-
-/* --- Sopra il libro: il sigillo di ceralacca (ascolta / pausa) --- */
-.lettura-intestazione {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1.6rem;            /* spazio per l'etichetta "ascolta" sotto il sigillo */
-}
-
-/* il sigillo sta fuori dalla scena del libro: misure in px invece di cqw */
-.lettura-intestazione .sigillo {
-  position: relative;
-  left: auto;
-  top: auto;
-  width: clamp(60px, 6vw, 88px);    /* cresce con lo schermo, ma tra 60 e 88 px */
-  transform: rotate(-8deg);
-  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.6));
-}
-
-.lettura-intestazione .sigillo:hover {
-  transform: rotate(-8deg) scale(1.07);
-}
-
-.lettura-intestazione .sigillo-etichetta {
-  font-size: 1rem;
-  margin-top: 2px;
-  color: var(--oro-chiaro);                       /* chiaro: ora sta sullo sfondo scuro */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-}
-
-.lettura-intestazione .sigillo-icona {
-  filter: drop-shadow(0 1px 0 rgba(60, 8, 4, 0.8));
 }
 
 /* --- La scena: l'immagine del libro (ritagliata, sfondo trasparente), sempre in proporzione --- */
@@ -94,6 +68,15 @@
   color: #7a2f1f;
 }
 
+/* il fregio al posto delle immagini, finche' non ci sono */
+.libro-fregio {
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 4cqw;
+  color: rgba(107, 68, 35, 0.35);
+}
+
+/* ================= A5 – La frase letta: luce di candela ================= */
+
 /* ogni frase e' un pezzo a se': la voce evidenzia quella che sta leggendo */
 .frase {
   border-radius: 4px;
@@ -104,13 +87,13 @@
   transition: background-color 0.6s ease, box-shadow 0.6s ease, opacity 0.6s ease;
 }
 
-/* ===== Effetto riflettore: mentre una frase e' illuminata, le altre si attenuano ===== */
-/* :has() = "la pagina che CONTIENE una frase letta" */
+/* Effetto riflettore: mentre una frase e' illuminata, le altre si attenuano.
+   :has() = "la pagina che CONTIENE una frase letta" */
 .libro-pagina-sx:has(.frase-letta) .frase:not(.frase-letta) {
   opacity: 0.5;
 }
 
-/* ===== La frase che la voce sta leggendo: luce di candela ambrata con un tocco di magia ===== */
+/* La frase che la voce sta leggendo: luce di candela ambrata con un tocco di magia */
 .frase-letta {
   color: #2b1806;                                  /* inchiostro piu' scuro: nitido sulla luce */
   /* ambra calda con un riflesso piu' chiaro al centro, che scorre piano da sinistra a destra */
@@ -146,7 +129,7 @@
   to   { background-position: -150% 0; }
 }
 
-/* ===== La lucina fatata: due stelle d'oro che scintillano a turno, all'inizio e alla fine ===== */
+/* La lucina fatata: due stelle d'oro che scintillano a turno, all'inizio e alla fine */
 .frase-letta::before,
 .frase-letta::after {
   content: '✦';
@@ -174,11 +157,82 @@
   50%      { opacity: 1;    transform: scale(1.25) rotate(25deg); }
 }
 
-/* Chi ha chiesto al sistema "riduci movimento": luce forte ma ferma, stelline fisse */
+/* ================= A6 – Il foglio che gira sulla rilegatura ================= */
+
+.foglio-che-gira {
+  position: absolute;
+  /* la misura di una pagina disegnata: se non combacia con il libro, regola questi 3 valori */
+    --larghezza-foglio: 40%;                         /* cambia solo questo per allargarlo o stringerlo */
+  top: 4%;
+  height: 84%;
+  width: var(--larghezza-foglio);
+  z-index: 2;                                      /* sopra il testo */
+  pointer-events: none;
+
+  /* pergamena: due macchie d'acquerello leggere (rosa e azzurra), come le pagine del libro,
+     e la carta piu' scura vicino alla rilegatura */
+  background:
+    radial-gradient(ellipse at 70% 30%, rgba(210, 165, 200, 0.25), transparent 45%),
+    radial-gradient(ellipse at 30% 75%, rgba(150, 200, 215, 0.22), transparent 50%),
+    linear-gradient(90deg, #d9c69c 0%, #f3e6c8 12%, #f7eed8 60%, #ecdcb8 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+
+  animation-duration: 0.9s;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+/* Avanti: parte sopra la pagina DESTRA e gira sul suo bordo sinistro (la rilegatura) */
+.foglio-avanti {
+  left: 50%;
+  transform-origin: left center;
+  border-radius: 2px 10px 10px 2px;
+  animation-name: giro-avanti;
+}
+
+/* Indietro: parte sopra la pagina SINISTRA e gira sul suo bordo destro (la rilegatura) */
+.foglio-indietro {
+    left: calc(50% - var(--larghezza-foglio));       /* finisce sempre esattamente alla rilegatura */
+  transform-origin: right center;
+  border-radius: 10px 2px 2px 10px;
+  animation-name: giro-indietro;
+}
+
+/* perspective() dentro transform: la profondita' 3D vale solo per il foglio
+   (la scena del libro ha un filter, che altrimenti "appiattirebbe" il 3D).
+   Il foglio e' semitrasparente: si intravede il libro sotto, come carta sottile */
+@keyframes giro-avanti {
+  0%   { transform: perspective(2000px) rotateY(0deg);    filter: brightness(1);    opacity: 0.65; }
+  50%  { transform: perspective(2000px) rotateY(-90deg);  filter: brightness(0.9);  opacity: 0.5; }   /* di taglio: un po' in ombra */
+  85%  { transform: perspective(2000px) rotateY(-180deg); filter: brightness(1);    opacity: 0.6; }
+  100% { transform: perspective(2000px) rotateY(-180deg); opacity: 0; }                               /* atterrato: sfuma */
+}
+
+@keyframes giro-indietro {
+  0%   { transform: perspective(2000px) rotateY(0deg);   filter: brightness(1);    opacity: 0.65; }
+  50%  { transform: perspective(2000px) rotateY(90deg);  filter: brightness(0.9);  opacity: 0.5; }
+  85%  { transform: perspective(2000px) rotateY(180deg); filter: brightness(1);    opacity: 0.6; }
+  100% { transform: perspective(2000px) rotateY(180deg); opacity: 0; }
+}
+
+/* Il testo nuovo compare mentre il foglio atterra (dopo 0,4 s).
+   "backwards": invisibile durante l'attesa, poi torna normale (non blocca l'effetto di aria-busy) */
+.testo-compare {
+  animation: compare 0.5s ease 0.4s backwards;
+}
+
+@keyframes compare {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ================= "Riduci movimento" ================= */
+/* Per chi ha chiesto al sistema meno animazioni: luce ferma, niente foglio che gira, niente dissolvenze */
 @media (prefers-reduced-motion: reduce) {
   .frase-letta,
   .frase-letta::before,
-  .frase-letta::after {
+  .frase-letta::after,
+  .testo-compare {
     animation: none;
   }
 
@@ -192,45 +246,14 @@
   .frase-letta::after {
     opacity: 0.9;
   }
+
+  .foglio-che-gira {
+    display: none;
+  }
 }
 
-/* il fregio al posto delle immagini, finche' non ci sono */
-.libro-fregio {
-  font-family: 'IM Fell English', Georgia, serif;
-  font-size: 4cqw;
-  color: rgba(107, 68, 35, 0.35);
-}
-
-/* --- Sotto il libro: i pulsanti per sfogliare e, al centro, il numero di pagina --- */
-.lettura-navigazione {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 900px;
-  margin: 1rem auto 0;
-}
-
-.lettura-centro {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-}
-
-.lettura-numero {
-  font-family: 'IM Fell English', Georgia, serif;
-  font-style: italic;
-  font-size: 1.2rem;
-  color: var(--oro-chiaro);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
-}
-
-.lettura-navigazione .btn-elimina {
-  color: rgba(247, 239, 217, 0.9);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-/* --- Telefono: niente libro (sarebbe minuscolo), solo la pagina di testo su pergamena --- */
+/* ================= Telefono ================= */
+/* Niente libro (sarebbe minuscolo): solo la pagina di testo su pergamena */
 @media (max-width: 768px) {
   .libro-scena {
     aspect-ratio: auto;
@@ -255,4 +278,33 @@
   .libro-pagina-dx {
     display: none;
   }
+
+  /* sul telefono il libro non c'e': niente foglio che gira */
+  .foglio-che-gira {
+    display: none;
+  }
+}   /* ← FINE della @media del telefono: tutto quello che c'e' sotto vale sempre */
+
+/* ================= Modalita' immersiva (schermo intero) ================= */
+/* :root:fullscreen = "la pagina e' a schermo intero" (lo attiva il browser da solo) */
+
+/* il contenitore di Bootstrap toglie i margini: il libro puo' usare tutto lo schermo */
+:root:fullscreen main {
+  max-width: none;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* la pagina occupa tutta l'altezza; il libro parte dall'alto e scende di --spazio-sopra */
+:root:fullscreen .lettura {
+  --spazio-sopra: 10vh;                            /* piu' grande = libro piu' in basso */
+  min-height: 100vh;
+  padding-top: var(--spazio-sopra);
+  padding-bottom: 0;
+}
+
+/* il libro cresce il piu' possibile, ma senza mai uscire dallo schermo in altezza
+   (tolto anche lo spazio sopra) */
+:root:fullscreen .libro-scena {
+  max-width: min(1600px, calc((100vh - 3rem - var(--spazio-sopra)) * 1376 / 655));
 }
