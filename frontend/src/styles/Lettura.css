@@ -96,14 +96,102 @@
 
 /* ogni frase e' un pezzo a se': la voce evidenzia quella che sta leggendo */
 .frase {
-  border-radius: 3px;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  border-radius: 4px;
+  /* una frase lunga va a capo su piu' righe: cosi' ogni riga ha i suoi angoli arrotondati e il suo bagliore */
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  /* dissolvenza morbida tra una frase e l'altra */
+  transition: background-color 0.6s ease, box-shadow 0.6s ease, opacity 0.6s ease;
 }
 
-/* la frase che la voce sta leggendo: un velo dorato, come una luce di candela */
+/* ===== Effetto riflettore: mentre una frase e' illuminata, le altre si attenuano ===== */
+/* :has() = "la pagina che CONTIENE una frase letta" */
+.libro-pagina-sx:has(.frase-letta) .frase:not(.frase-letta) {
+  opacity: 0.5;
+}
+
+/* ===== La frase che la voce sta leggendo: luce di candela ambrata con un tocco di magia ===== */
 .frase-letta {
-  background-color: rgba(214, 170, 80, 0.35);
-  box-shadow: 0 0 0 0.15em rgba(214, 170, 80, 0.35);
+  color: #2b1806;                                  /* inchiostro piu' scuro: nitido sulla luce */
+  /* ambra calda con un riflesso piu' chiaro al centro, che scorre piano da sinistra a destra */
+  background-image: linear-gradient(
+    100deg,
+    rgba(255, 176, 60, 0.6) 0%,
+    rgba(255, 214, 120, 0.95) 45%,
+    rgba(255, 176, 60, 0.6) 90%
+  );
+  background-size: 250% 100%;
+  animation:
+    candela 2.4s ease-in-out infinite,             /* l'alone che respira */
+    riflesso 5s linear infinite;                   /* la luce che scorre */
+}
+
+/* L'alone: vicino intenso + luce arancio larga, che cresce e cala come una fiamma */
+@keyframes candela {
+  0%, 100% {
+    box-shadow:
+      0 0 0.3em 0.15em rgba(255, 185, 70, 0.85),
+      0 0 1.3em 0.5em rgba(255, 140, 30, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0.5em 0.25em rgba(255, 200, 90, 1),
+      0 0 2em 0.8em rgba(255, 150, 40, 0.6);
+  }
+}
+
+/* Il riflesso dorato che attraversa la frase */
+@keyframes riflesso {
+  from { background-position: 100% 0; }
+  to   { background-position: -150% 0; }
+}
+
+/* ===== La lucina fatata: due stelle d'oro che scintillano a turno, all'inizio e alla fine ===== */
+.frase-letta::before,
+.frase-letta::after {
+  content: '✦';
+  display: inline-block;
+  font-size: 1em;
+  color: #e89a1a;                                  /* oro carico: si vede sulla carta */
+  text-shadow:
+    0 0 1px #7a4300,                               /* contorno scuro sottile */
+    0 0 6px #ffcf5a,
+    0 0 14px #ffa630;                              /* aloni oro e arancio */
+  animation: scintilla 1.8s ease-in-out infinite;
+}
+
+.frase-letta::before {
+  margin-right: 0.2em;
+}
+
+.frase-letta::after {
+  margin-left: 0.05em;
+  animation-delay: 0.9s;                           /* a turno con quella iniziale */
+}
+
+@keyframes scintilla {
+  0%, 100% { opacity: 0.35; transform: scale(0.65) rotate(0deg); }
+  50%      { opacity: 1;    transform: scale(1.25) rotate(25deg); }
+}
+
+/* Chi ha chiesto al sistema "riduci movimento": luce forte ma ferma, stelline fisse */
+@media (prefers-reduced-motion: reduce) {
+  .frase-letta,
+  .frase-letta::before,
+  .frase-letta::after {
+    animation: none;
+  }
+
+  .frase-letta {
+    box-shadow:
+      0 0 0.4em 0.2em rgba(255, 190, 80, 0.9),
+      0 0 1.6em 0.6em rgba(255, 145, 35, 0.5);
+  }
+
+  .frase-letta::before,
+  .frase-letta::after {
+    opacity: 0.9;
+  }
 }
 
 /* il fregio al posto delle immagini, finche' non ci sono */
