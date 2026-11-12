@@ -5,6 +5,7 @@ import ControlliLettura from '../components/ControlliLettura'
 import { useVoceNarrante } from '../hooks/useVoceNarrante'
 import { leggiSegnalibro, salvaSegnalibro } from '../utils/segnalibro'
 import '../styles/Lettura.css'
+import LuciCandele from '../components/LuciCandele'
 
 // Quanti caratteri stanno, piu' o meno, nella pagina disegnata del libro.
 // Se il testo esce dalla carta, abbassa questo numero; se avanza spazio, alzalo.
@@ -140,6 +141,9 @@ export default function Lettura() {
     <section className="lettura">
       {/* Lo sfondo della scrivania: solo in questa pagina */}
       <div className="lettura-sfondo" aria-hidden="true" />
+      
+      {/* Le fiamme delle candele dello sfondo che tremolano */}
+      <LuciCandele />
 
       {errore && (
         <div className="alert alert-danger text-center" role="alert" data-testid="lettura-errore">
