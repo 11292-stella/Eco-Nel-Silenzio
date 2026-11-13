@@ -14,9 +14,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +29,7 @@ import java.util.concurrent.TimeUnit;
  *   1. Piper  → testo in .wav  (chiamata HTTP al server di Piper, sempre acceso)
  *   2. ffmpeg → abbassa la tonalita' e converte in .mp3 (programma esterno)
  * Gli mp3 restano salvati: la stessa frase non viene generata due volte (cache su disco).
+ * La data di ogni mp3 = l'ultima volta che e' stato usato: la pulizia cancella quelli non ascoltati da tempo.
  */
 @Slf4j
 @Service
@@ -62,6 +65,7 @@ public class SintesiService {
             Path mp3 = cartella.resolve(nomeFile(testo) + ".mp3");
             if (Files.exists(mp3)) {
                 log.debug("Audio gia' pronto: {}", mp3.getFileName());
+                segnaComeUsato(mp3);                          // NUOVO: "appena ascoltato", la pulizia lo lascia stare
                 return mp3;                                   // cache: niente Piper
             }
 
@@ -89,6 +93,17 @@ public class SintesiService {
             }
         } catch (IOException e) {
             throw new SintesiException("Impossibile generare l'audio", e);
+        }
+    }
+
+    // NUOVO: come il comando "touch": la data del file diventa adesso.
+    // Se non ci riesce (file bloccato, permessi...) non e' grave: l'audio si ascolta lo stesso,
+    // al massimo verra' cancellato un po' prima e poi rigenerato
+    private void segnaComeUsato(Path mp3) {
+        try {
+            Files.setLastModifiedTime(mp3, FileTime.from(Instant.now()));
+        } catch (IOException e) {
+            log.debug("Impossibile aggiornare la data di {}: {}", mp3.getFileName(), e.getMessage());
         }
     }
 

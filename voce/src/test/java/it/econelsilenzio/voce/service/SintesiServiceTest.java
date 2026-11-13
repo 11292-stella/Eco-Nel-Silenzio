@@ -168,7 +168,7 @@ class SintesiServiceTest {
         VoceProperties props = new VoceProperties(
                 new VoceProperties.Piper(url, 1.1, 0.5),
                 new VoceProperties.Ffmpeg("ffmpeg", 0.92, 16000),
-                new VoceProperties.Audio(cartella.toString())
+                new VoceProperties.Audio(cartella.toString(), 7, 500)   // NUOVO: giorni e MB della pulizia
         );
         return new SintesiService(props);
     }
