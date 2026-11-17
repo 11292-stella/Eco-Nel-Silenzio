@@ -1,0 +1,28 @@
+/* La pagina destra del libro: le immagini una sopra l'altra, visibile solo quella attiva */
+
+.atmosfera {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.atmosfera-immagine {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;                    /* sempre intera, senza tagli */
+  opacity: 0;
+  transition: opacity 2.5s ease-in-out;   /* dissolvenza lenta: il libro resta il protagonista */
+}
+
+.atmosfera-attiva {
+  opacity: 1;
+}
+
+/* Riduci movimento: cambio quasi immediato, niente dissolvenza lunga */
+@media (prefers-reduced-motion: reduce) {
+  .atmosfera-immagine {
+    transition-duration: 0.3s;
+  }
+} /* fine @media prefers-reduced-motion */

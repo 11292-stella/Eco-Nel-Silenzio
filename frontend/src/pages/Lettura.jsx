@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 import { paginaLibro } from '../api/libri'
+import AtmosferaPagina from '../components/AtmosferaPagina'          // NUOVO
 import ControlliLettura from '../components/ControlliLettura'
+import LuciCandele from '../components/LuciCandele'
+import { useAtmosfera } from '../hooks/useAtmosfera'                  // NUOVO
 import { useVoceNarrante } from '../hooks/useVoceNarrante'
 import { leggiSegnalibro, salvaSegnalibro } from '../utils/segnalibro'
 import '../styles/Lettura.css'
-import LuciCandele from '../components/LuciCandele'
 
 // Quanti caratteri stanno, piu' o meno, nella pagina disegnata del libro.
 // Se il testo esce dalla carta, abbassa questo numero; se avanza spazio, alzalo.
 const CARATTERI_PER_FOGLIO = 650
+
+// NUOVO: l'atmosfera usata finche' non c'e' il selettore (Fase 2) e poi Ollama
+const TEMA_PREDEFINITO = 'notte'
 
 /**
  * Divide le frasi di una pagina del PDF in "fogli" che stanno nella pagina del libro.
@@ -37,7 +42,7 @@ function dividiInFogli(frasi) {
 
 /**
  * La pagina di lettura di un libro: /libri/:id
- * Il libro aperto: a sinistra il testo, a destra (piu' avanti) le immagini d'atmosfera.
+ * Il libro aperto: a sinistra il testo, a destra le immagini d'atmosfera in dissolvenza.
  * Sotto il libro la plancia con tutti i comandi; la voce sta nell'hook useVoceNarrante.
  * Sfogliando, un foglio di pergamena gira sulla rilegatura.
  */
@@ -54,6 +59,9 @@ export default function Lettura() {
   // Il foglio che gira: { verso: 'avanti' | 'indietro', chiave } oppure null.
   // La chiave cambia a ogni giro, cosi' React crea un elemento nuovo e l'animazione riparte da capo
   const [sfoglio, setSfoglio] = useState(null)
+
+  // NUOVO: gli indirizzi delle immagini d'atmosfera (dal servizio immagini; [] se non risponde)
+  const immaginiAtmosfera = useAtmosfera(TEMA_PREDEFINITO)
 
   // Riparte ogni volta che cambia il libro (id) o la pagina (numero).
   // Qui dentro si aggiorna lo stato solo con la risposta del server (then / catch / finally).
@@ -141,7 +149,7 @@ export default function Lettura() {
     <section className="lettura">
       {/* Lo sfondo della scrivania: solo in questa pagina */}
       <div className="lettura-sfondo" aria-hidden="true" />
-      
+
       {/* Le fiamme delle candele dello sfondo che tremolano */}
       <LuciCandele />
 
@@ -178,9 +186,9 @@ export default function Lettura() {
           )}
         </article>
 
-        {/* Pagina destra: qui arriveranno le immagini d'atmosfera */}
+        {/* NUOVO: pagina destra con le immagini d'atmosfera in dissolvenza (il fregio se non ci sono) */}
         <div className="libro-pagina libro-pagina-dx" aria-hidden="true">
-          <span className="libro-fregio">❦</span>
+          <AtmosferaPagina immagini={immaginiAtmosfera} />
         </div>
 
         {/* Il foglio che gira sulla rilegatura: c'e' solo durante l'animazione, poi si toglie da solo */}
