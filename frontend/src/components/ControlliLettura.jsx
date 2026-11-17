@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
+import SelettoreAtmosfera from './SelettoreAtmosfera'
 import SigilloVoce from './SigilloVoce'
 import { useInattivita } from '../hooks/useInattivita'
 import { useSchermoIntero } from '../hooks/useSchermoIntero'
@@ -12,6 +13,7 @@ import '../styles/ControlliLettura.css'
  *   [◀ Indietro]   (⏮)  (SIGILLO)  (⏭)  [1×]   [Avanti ▶]
  *        ━━━━━━━━━━━━━●──────────   Pagina 1 di 3
  *     ↶ torna alla libreria   ⟲ ricomincia   ⛶ schermo intero
+ *        [Notte] [Pioggia] [Bosco] [Mare] [Città]
  *
  * @param voce              quello che restituisce useVoceNarrante
  * @param pronta            false finche' la pagina non e' arrivata
@@ -21,19 +23,22 @@ import '../styles/ControlliLettura.css'
  * @param cePrecedente      c'e' qualcosa prima?
  * @param ceSuccessivo      c'e' qualcosa dopo?
  * @param onIndietro, onAvanti, onRicomincia   le azioni della pagina
+ * @param tema              il tema d'atmosfera attivo
+ * @param onCambiaTema      il lettore sceglie un altro tema
  */
 export default function ControlliLettura({
   voce, pronta, caricamento,
   numero, totale, avanzamento,
   cePrecedente, ceSuccessivo,
   onIndietro, onAvanti, onRicomincia,
+  tema, onCambiaTema,
 }) {
   // 1.15 → "1,15×" (con la virgola, all'italiana)
   const etichettaVelocita = `${voce.velocita.toLocaleString('it-IT')}×`
   const percentuale = Math.round(avanzamento * 100)
   const allInizio = !cePrecedente
 
-    // Modalita' immersiva: schermo intero e navbar nascosta
+  // Modalita' immersiva: schermo intero e navbar nascosta
   const schermo = useSchermoIntero()
 
   // La plancia sparisce se nessuno tocca niente da 3 secondi e il mouse non e' sopra:
@@ -168,6 +173,9 @@ export default function ControlliLettura({
           </button>
         )}
       </div>
+
+      {/* --- Riga 4: l'atmosfera della pagina destra --- */}
+      <SelettoreAtmosfera temaAttivo={tema} onCambia={onCambiaTema} />
     </div>
   )
 }

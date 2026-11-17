@@ -1,20 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router'
 import { paginaLibro } from '../api/libri'
-import AtmosferaPagina from '../components/AtmosferaPagina'          // NUOVO
+import AtmosferaPagina from '../components/AtmosferaPagina'
 import ControlliLettura from '../components/ControlliLettura'
 import LuciCandele from '../components/LuciCandele'
-import { useAtmosfera } from '../hooks/useAtmosfera'                  // NUOVO
+import { useAtmosfera } from '../hooks/useAtmosfera'
 import { useVoceNarrante } from '../hooks/useVoceNarrante'
+import { leggiAtmosfera, salvaAtmosfera } from '../utils/atmosfera'
 import { leggiSegnalibro, salvaSegnalibro } from '../utils/segnalibro'
 import '../styles/Lettura.css'
 
 // Quanti caratteri stanno, piu' o meno, nella pagina disegnata del libro.
 // Se il testo esce dalla carta, abbassa questo numero; se avanza spazio, alzalo.
 const CARATTERI_PER_FOGLIO = 650
-
-// NUOVO: l'atmosfera usata finche' non c'e' il selettore (Fase 2) e poi Ollama
-const TEMA_PREDEFINITO = 'notte'
 
 /**
  * Divide le frasi di una pagina del PDF in "fogli" che stanno nella pagina del libro.
@@ -60,8 +58,19 @@ export default function Lettura() {
   // La chiave cambia a ogni giro, cosi' React crea un elemento nuovo e l'animazione riparte da capo
   const [sfoglio, setSfoglio] = useState(null)
 
-  // NUOVO: gli indirizzi delle immagini d'atmosfera (dal servizio immagini; [] se non risponde)
-  const immaginiAtmosfera = useAtmosfera(TEMA_PREDEFINITO)
+  // Il tema d'atmosfera di QUESTO libro (inizializzazione pigra, come il segnalibro)
+  const [tema, setTema] = useState(() => leggiAtmosfera(id))
+
+  // Il lettore sceglie un tema: lo mostro e lo ricordo per questo libro.
+  // useCallback: la funzione resta la STESSA tra un disegno e l'altro (cambia solo se cambia il libro),
+  // cosi' l'effetto del selettore che la usa non rigira a ogni disegno
+  const cambiaAtmosfera = useCallback((nuovoTema) => {
+    setTema(nuovoTema)
+    salvaAtmosfera(id, nuovoTema)
+  }, [id])
+
+  // Gli indirizzi delle immagini d'atmosfera del tema (dal servizio immagini; [] se non risponde)
+  const immaginiAtmosfera = useAtmosfera(tema)
 
   // Riparte ogni volta che cambia il libro (id) o la pagina (numero).
   // Qui dentro si aggiorna lo stato solo con la risposta del server (then / catch / finally).
@@ -186,7 +195,7 @@ export default function Lettura() {
           )}
         </article>
 
-        {/* NUOVO: pagina destra con le immagini d'atmosfera in dissolvenza (il fregio se non ci sono) */}
+        {/* Pagina destra con le immagini d'atmosfera in dissolvenza (il fregio se non ci sono) */}
         <div className="libro-pagina libro-pagina-dx" aria-hidden="true">
           <AtmosferaPagina immagini={immaginiAtmosfera} />
         </div>
@@ -216,6 +225,8 @@ export default function Lettura() {
         onIndietro={indietro}
         onAvanti={avanti}
         onRicomincia={ricomincia}
+        tema={tema}
+        onCambiaTema={cambiaAtmosfera}
       />
     </section>
   )
