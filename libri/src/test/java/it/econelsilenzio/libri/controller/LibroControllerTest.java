@@ -4,6 +4,7 @@ import it.econelsilenzio.libri.dto.PaginaDto;
 import it.econelsilenzio.libri.exception.NotFoundException;
 import it.econelsilenzio.libri.model.Libro;
 import it.econelsilenzio.libri.service.LibroService;
+import it.econelsilenzio.libri.service.PreparazioneAudioService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,9 @@ class LibroControllerTest {
 
     @MockitoBean
     private LibroService libroService; // service finto: decidiamo noi cosa risponde
+
+    @MockitoBean
+    private PreparazioneAudioService preparazioneAudioService; // finto: niente RabbitMQ nei test del controller
 
     @Test
     @DisplayName("POST /api/libri con un PDF → 201 e il riepilogo del libro")
@@ -78,7 +82,7 @@ class LibroControllerTest {
     }
 
     @Test
-    @DisplayName("GET di una pagina esistente → 200 con le frasi in ordine")
+    @DisplayName("GET di una pagina esistente → 200 con le frasi in ordine e preparazione della pagina dopo")
     void paginaEsistente() throws Exception {
         PaginaDto pagina = new PaginaDto(1L, 3, 42, List.of(
                 new PaginaDto.FraseDto(1, "Era una notte buia."),
@@ -92,10 +96,13 @@ class LibroControllerTest {
                 .andExpect(jsonPath("$.totalePagine").value(42))
                 .andExpect(jsonPath("$.frasi.length()").value(2))
                 .andExpect(jsonPath("$.frasi[1].testo").value("Il sig. Rossi tornò a casa!"));
+
+        // Fase 3: aperta la pagina 3, si chiede di preparare l'audio delle successive
+        verify(preparazioneAudioService).preparaDopo(1L, 3);
     }
 
     @Test
-    @DisplayName("GET di una pagina inesistente → 404 con ApiError")
+    @DisplayName("GET di una pagina inesistente → 404 con ApiError e niente in coda")
     void paginaInesistente() throws Exception {
         when(libroService.pagina(1L, 99))
                 .thenThrow(new NotFoundException("Pagina 99 del libro 1 non trovata"));
@@ -104,10 +111,13 @@ class LibroControllerTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value("Pagina 99 del libro 1 non trovata"));
+
+        // pagina sbagliata: non si prepara niente
+        verifyNoInteractions(preparazioneAudioService);
     }
 
     @Test
-    @DisplayName("GET con un id non numerico → 400 (non 500) e il service non viene chiamato")
+    @DisplayName("GET con un id non numerico → 400 (non 500) e nessun service viene chiamato")
     void idNonNumerico() throws Exception {
         mockMvc.perform(get("/api/libri/abc/pagine/2"))
                 .andExpect(status().isBadRequest())
@@ -115,7 +125,7 @@ class LibroControllerTest {
                 .andExpect(jsonPath("$.message")
                         .value("Il parametro 'id' non è valido: deve essere un numero"));
 
-        verifyNoInteractions(libroService);
+        verifyNoInteractions(libroService, preparazioneAudioService);
     }
 
     @Test
@@ -126,7 +136,7 @@ class LibroControllerTest {
                 .andExpect(jsonPath("$.message")
                         .value("Il parametro 'numero' non è valido: deve essere un numero"));
 
-        verifyNoInteractions(libroService);
+        verifyNoInteractions(libroService, preparazioneAudioService);
     }
 
     // --- Passo 44: DELETE /api/libri/{id} ---

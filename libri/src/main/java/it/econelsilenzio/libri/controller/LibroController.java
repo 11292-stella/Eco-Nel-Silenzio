@@ -4,6 +4,7 @@ import it.econelsilenzio.libri.dto.LibroDto;
 import it.econelsilenzio.libri.dto.PaginaDto;
 import it.econelsilenzio.libri.exception.ValidationException;
 import it.econelsilenzio.libri.service.LibroService;
+import it.econelsilenzio.libri.service.PreparazioneAudioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -19,6 +20,7 @@ import java.util.List;
 public class LibroController {
 
     private final LibroService libroService;
+    private final PreparazioneAudioService preparazioneAudioService;
 
     /**
      * Carica un PDF: lo divide in pagine e frasi e lo salva.
@@ -48,10 +50,14 @@ public class LibroController {
 
     /**
      * Una pagina del libro con le sue frasi.
+     * Intanto (in background) manda in coda le frasi delle pagine successive,
+     * cosi' voce ne prepara l'audio prima che il lettore ci arrivi.
      */
     @GetMapping("/{id}/pagine/{numero}")
     public PaginaDto pagina(@PathVariable Long id, @PathVariable int numero) {
-        return libroService.pagina(id, numero);
+        PaginaDto pagina = libroService.pagina(id, numero);      // 404 se non esiste: si ferma qui
+        preparazioneAudioService.preparaDopo(id, numero);         // @Async: non aspetta
+        return pagina;
     }
 
     // Controlli sul file prima di passarlo al service
