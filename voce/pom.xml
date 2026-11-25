@@ -64,6 +64,23 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- Test con un RabbitMQ vero in Docker (Testcontainers) -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-rabbitmq</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- RabbitMQ: riceve le frasi da preparare in anticipo (le manda libri) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
